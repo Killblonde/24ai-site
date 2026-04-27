@@ -32,10 +32,9 @@
   --error:#ff6b6b;
 }
 *,*::before,*::after{box-sizing:border-box}
-html,body{margin:0;padding:0}
-html{height:100%;background:var(--bg-primary)}
+html,body{margin:0;padding:0;height:100%;overflow:hidden}
+html{background:var(--bg-primary)}
 body{
-  min-height:100dvh;
   background:var(--bg-primary);
   color:var(--text-primary);
   font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
@@ -43,7 +42,6 @@ body{
   line-height:1.5;
   -webkit-font-smoothing:antialiased;
   -moz-osx-font-smoothing:grayscale;
-  overflow-x:hidden;
 }
 button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
 input,textarea{font-family:inherit;color:inherit}
@@ -52,7 +50,8 @@ a{color:inherit}
 
 /* Topbar */
 .topbar{
-  position:sticky;top:0;z-index:50;
+  position:relative;z-index:50;
+  flex:0 0 auto;
   height:56px;
   display:flex;align-items:center;justify-content:space-between;
   padding:0 16px;
@@ -75,13 +74,24 @@ a{color:inherit}
 .topbar-bell.muted{color:var(--text-muted)}
 
 /* Screens */
-.screen{display:none;flex-direction:column;min-height:100dvh}
+.screen{
+  display:none;
+  flex-direction:column;
+  height:100vh;
+  height:100dvh;
+  max-height:100dvh;
+  overflow:hidden;
+}
 .screen[data-active]{display:flex}
 
 /* Welcome */
 #welcome{background:var(--gradient-hero)}
 .welcome-wrap{
-  flex:1;display:flex;align-items:center;justify-content:center;
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
+  display:flex;align-items:center;justify-content:center;
   padding:24px 20px 40px;
 }
 .welcome-inner{
@@ -157,7 +167,10 @@ a{color:inherit}
 /* Chat */
 #chat{background:var(--bg-primary)}
 .chat-scroll{
-  flex:1;overflow-y:auto;
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  overflow-x:hidden;
   padding:16px 0 16px;
   -webkit-overflow-scrolling:touch;
   overscroll-behavior:contain;
@@ -247,7 +260,8 @@ a{color:inherit}
 
 /* Input bar */
 .input-bar{
-  position:sticky;bottom:0;
+  position:relative;
+  flex:0 0 auto;
   background:var(--bg-secondary);
   border-top:1px solid var(--border-color);
   padding:12px 16px calc(12px + env(safe-area-inset-bottom));
@@ -300,7 +314,10 @@ a{color:inherit}
 /* Report */
 #report{background:var(--bg-primary)}
 .report-wrap{
-  flex:1;
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
   padding:24px 16px 40px;
   display:flex;flex-direction:column;align-items:center;
 }
@@ -347,7 +364,10 @@ a{color:inherit}
 /* Contact */
 #contact{background:var(--bg-primary)}
 .contact-wrap{
-  flex:1;
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
   padding:32px 16px 40px;
   display:flex;flex-direction:column;align-items:center;
 }
@@ -427,7 +447,10 @@ a{color:inherit}
 /* Thanks */
 #thanks{background:var(--bg-primary)}
 .thanks-wrap{
-  flex:1;
+  flex:1 1 auto;
+  min-height:0;
+  overflow-y:auto;
+  -webkit-overflow-scrolling:touch;
   padding:48px 20px;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
 }
@@ -617,7 +640,10 @@ const state={
   pageInitialized:false,
   soundOn:true,
   audioCtx:null,
+  userScrolledUp:false,
 };
+
+const SCROLL_THRESHOLD=80;
 
 /* ---------- Sound engine (Web Audio, no files) ---------- */
 function ensureAudioCtx(){
@@ -735,7 +761,7 @@ function showScreen(name){
   lsSet(KEY.screen,name);
   if(name==='chat'){
     setTimeout(()=>{
-      scrollChatToBottom(false);
+      scrollChatToBottom(false,true);
       const ta=document.getElementById('chatInput');
       if(ta && window.innerWidth>768)ta.focus();
     },50);
@@ -821,10 +847,32 @@ function renderMarkdown(text){
 function chatListEl(){return document.getElementById('chatList')}
 function chatScrollEl(){return document.getElementById('chatScroll')}
 
-function scrollChatToBottom(smooth){
+function isChatAtBottom(el){
+  if(!el)return true;
+  return el.scrollHeight - el.scrollTop - el.clientHeight < SCROLL_THRESHOLD;
+}
+
+function scrollChatToBottom(smooth,force){
   const el=chatScrollEl();
   if(!el)return;
-  el.scrollTo({top:el.scrollHeight,behavior:smooth?'smooth':'auto'});
+  if(!force && state.userScrolledUp)return;
+  // requestAnimationFrame нужен, чтобы scrollHeight уже учитывал только что вставленный узел.
+  requestAnimationFrame(()=>{
+    el.scrollTop=el.scrollHeight;
+    if(smooth){
+      el.scrollTo({top:el.scrollHeight,behavior:'smooth'});
+    }
+    state.userScrolledUp=false;
+  });
+}
+
+function bindChatScrollTracking(){
+  const el=chatScrollEl();
+  if(!el || el.__scrollBound)return;
+  el.__scrollBound=true;
+  el.addEventListener('scroll',()=>{
+    state.userScrolledUp=!isChatAtBottom(el);
+  },{passive:true});
 }
 
 function renderMessage(msg,opts){
@@ -891,7 +939,7 @@ function showTyping(){
   bubble.style.padding='0';
   wrap.appendChild(av);wrap.appendChild(bubble);
   list.appendChild(wrap);
-  scrollChatToBottom(true);
+  scrollChatToBottom(true,false);
 }
 function hideTyping(){
   const t=document.getElementById('typingMsg');
@@ -918,7 +966,7 @@ function showSystemMessage(text,withRetry){
     wrap.appendChild(btn);
   }
   list.appendChild(wrap);
-  scrollChatToBottom(true);
+  scrollChatToBottom(true,true);
 }
 
 /* ---------- API ---------- */
@@ -968,7 +1016,9 @@ async function sendMessage(text){
   saveMessages();
   const prevRole=state.messages.length>1?state.messages[state.messages.length-2].role:null;
   renderMessage(userMsg,{roleChange:prevRole && prevRole!=='user'});
-  scrollChatToBottom(true);
+  // Пользователь только что отправил — он ждёт увидеть свой пузырь и ответ. Скроллим всегда.
+  state.userScrolledUp=false;
+  scrollChatToBottom(true,true);
   state.lastUserMessage=text;
   setSendDisabled(true);
   state.pendingRequest=true;
@@ -988,7 +1038,8 @@ async function sendMessage(text){
     state.messages.push(asMsg);
     saveMessages();
     renderMessage(asMsg,{roleChange:true});
-    scrollChatToBottom(true);
+    // Новое сообщение от ассистента — всегда показываем целиком (force).
+    scrollChatToBottom(true,true);
     if(isFinal){Sounds.finalReport()}else{Sounds.newMessage()}
 
     if(isFinal){
@@ -1032,7 +1083,7 @@ function retryLastMessage(){
     state.messages.push(asMsg);
     saveMessages();
     renderMessage(asMsg,{roleChange:true});
-    scrollChatToBottom(true);
+    scrollChatToBottom(true,true);
     if(isFinal){Sounds.finalReport()}else{Sounds.newMessage()}
     if(isFinal){
       state.reportText=reply;saveReport();
@@ -1212,7 +1263,7 @@ async function startNewSession(){
       const asMsg={role:'assistant',content:reply,ts:Date.now()};
       state.messages.push(asMsg);saveMessages();
       renderMessage(asMsg,{});
-      scrollChatToBottom(true);
+      scrollChatToBottom(true,true);
       if(isFinal){Sounds.finalReport()}else{Sounds.newMessage()}
     }
     if(isFinal){
@@ -1236,6 +1287,14 @@ function setupViewportFix(){
   const update=()=>{
     const vh=window.visualViewport.height;
     document.documentElement.style.setProperty('--vh',vh+'px');
+    // При появлении/скрытии клавиатуры — держим последнее сообщение в зоне видимости,
+    // если пользователь не поднимался читать историю.
+    if(!state.userScrolledUp){
+      requestAnimationFrame(()=>{
+        const el=chatScrollEl();
+        if(el)el.scrollTop=el.scrollHeight;
+      });
+    }
   };
   update();
   window.visualViewport.addEventListener('resize',update);
@@ -1303,7 +1362,7 @@ function init(){
   });
   document.getElementById('btnContinue').addEventListener('click',()=>{
     showScreen('chat');
-    setTimeout(()=>scrollChatToBottom(true),50);
+    setTimeout(()=>scrollChatToBottom(true,true),50);
   });
   document.getElementById('btnBackToReport').addEventListener('click',()=>{
     showScreen('report');
@@ -1321,6 +1380,7 @@ function init(){
   });
 
   setupViewportFix();
+  bindChatScrollTracking();
   updateSendDisabledByInput();
 
   paintBells();
