@@ -1,0 +1,1345 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+
+<title>AI-диагностика бизнеса · 24AI</title>
+<link rel="icon" href="img/logo.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg-primary:#0a0a0f;
+  --bg-secondary:#12121a;
+  --bg-card:#1a1a24;
+  --bg-card-hover:#22222e;
+  --accent-yellow:#f7c948;
+  --accent-yellow-hover:#fad96a;
+  --accent-blue:#4a7dff;
+  --accent-purple:#8b5cf6;
+  --text-primary:#ffffff;
+  --text-secondary:#a0a0b0;
+  --text-muted:#6b6b7b;
+  --border-color:#2a2a3a;
+  --gradient-hero:linear-gradient(135deg,#1a1a2e 0%,#0a0a14 50%,#141428 100%);
+  --gradient-blue:linear-gradient(135deg,#4a7dff 0%,#8b5cf6 100%);
+  --radius-bubble:18px;
+  --radius-card:16px;
+  --radius-input:14px;
+  --max-content:720px;
+  --error:#ff6b6b;
+}
+*,*::before,*::after{box-sizing:border-box}
+html,body{margin:0;padding:0}
+html{height:100%;background:var(--bg-primary)}
+body{
+  min-height:100dvh;
+  background:var(--bg-primary);
+  color:var(--text-primary);
+  font-family:'Inter',-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+  font-size:16px;
+  line-height:1.5;
+  -webkit-font-smoothing:antialiased;
+  -moz-osx-font-smoothing:grayscale;
+  overflow-x:hidden;
+}
+button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+input,textarea{font-family:inherit;color:inherit}
+h1,h2,h3,h4{font-family:'Space Grotesk',sans-serif;margin:0;line-height:1.2;font-weight:700}
+a{color:inherit}
+
+/* Topbar */
+.topbar{
+  position:sticky;top:0;z-index:50;
+  height:56px;
+  display:flex;align-items:center;justify-content:space-between;
+  padding:0 16px;
+  background:rgba(10,10,15,0.85);
+  backdrop-filter:blur(8px);
+  -webkit-backdrop-filter:blur(8px);
+  border-bottom:1px solid transparent;
+}
+.topbar.with-border{border-bottom-color:var(--border-color)}
+.topbar-logo{width:36px;height:36px;display:block;object-fit:contain}
+.topbar-bell{
+  width:36px;height:36px;
+  display:flex;align-items:center;justify-content:center;
+  border-radius:50%;
+  color:var(--text-secondary);
+  transition:background 0.15s ease,color 0.15s ease;
+}
+.topbar-bell:hover{background:var(--bg-card-hover);color:var(--text-primary)}
+.topbar-bell svg{width:20px;height:20px}
+.topbar-bell.muted{color:var(--text-muted)}
+
+/* Screens */
+.screen{display:none;flex-direction:column;min-height:100dvh}
+.screen[data-active]{display:flex}
+
+/* Welcome */
+#welcome{background:var(--gradient-hero)}
+.welcome-wrap{
+  flex:1;display:flex;align-items:center;justify-content:center;
+  padding:24px 20px 40px;
+}
+.welcome-inner{
+  width:100%;max-width:540px;text-align:center;
+}
+.welcome-badge{
+  display:inline-flex;align-items:center;gap:8px;
+  padding:6px 14px;
+  background:rgba(247,201,72,0.1);
+  border:1px solid rgba(247,201,72,0.25);
+  border-radius:100px;
+  font-size:13px;color:var(--accent-yellow);
+  margin-bottom:24px;
+  font-weight:500;
+}
+.welcome-badge::before{
+  content:"";width:6px;height:6px;border-radius:50%;
+  background:var(--accent-yellow);
+  box-shadow:0 0 8px var(--accent-yellow);
+}
+.welcome-title{
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:700;
+  font-size:clamp(28px,6vw,44px);
+  letter-spacing:-0.02em;
+  margin:0 0 16px;
+}
+.welcome-title .accent{
+  background:linear-gradient(135deg,var(--accent-yellow) 0%,#fad96a 100%);
+  -webkit-background-clip:text;background-clip:text;
+  -webkit-text-fill-color:transparent;
+}
+.welcome-sub{
+  font-size:clamp(15px,2.4vw,18px);
+  color:var(--text-secondary);
+  margin:0 0 32px;
+  line-height:1.55;
+}
+.welcome-actions{display:flex;flex-direction:column;gap:12px;margin-bottom:28px}
+.welcome-actions.has-resume{flex-direction:row;justify-content:center;flex-wrap:wrap}
+.btn{
+  display:inline-flex;align-items:center;justify-content:center;gap:8px;
+  padding:14px 24px;
+  border-radius:12px;
+  font-size:16px;font-weight:600;
+  transition:transform 0.15s ease,background 0.15s ease,border-color 0.15s ease;
+  min-height:48px;
+  text-decoration:none;
+}
+.btn-primary{background:var(--accent-yellow);color:#000}
+.btn-primary:hover{background:var(--accent-yellow-hover)}
+.btn-primary:active{transform:scale(0.98)}
+.btn-primary[disabled]{background:#5a5430;color:#222;cursor:not-allowed}
+.btn-secondary{
+  background:transparent;color:var(--text-primary);
+  border:1px solid var(--border-color);
+}
+.btn-secondary:hover{background:var(--bg-card-hover);border-color:#3a3a4d}
+.btn-block{width:100%}
+.welcome-pills{
+  list-style:none;padding:0;margin:0;
+  display:flex;gap:10px;justify-content:center;flex-wrap:wrap;
+}
+.welcome-pills li{
+  padding:8px 14px;
+  background:var(--bg-card);
+  border:1px solid var(--border-color);
+  border-radius:100px;
+  font-size:13px;color:var(--text-secondary);
+  display:inline-flex;align-items:center;gap:6px;
+}
+
+/* Chat */
+#chat{background:var(--bg-primary)}
+.chat-scroll{
+  flex:1;overflow-y:auto;
+  padding:16px 0 16px;
+  -webkit-overflow-scrolling:touch;
+  overscroll-behavior:contain;
+}
+.chat-list{
+  max-width:var(--max-content);
+  margin:0 auto;
+  padding:0 16px;
+  display:flex;flex-direction:column;gap:12px;
+}
+.msg{
+  display:flex;align-items:flex-end;gap:10px;
+  animation:fadeUp 0.22s ease-out;
+}
+@keyframes fadeUp{
+  from{opacity:0;transform:translateY(8px)}
+  to{opacity:1;transform:translateY(0)}
+}
+.msg.user{justify-content:flex-end}
+.msg-avatar{
+  width:32px;height:32px;border-radius:50%;
+  background:linear-gradient(135deg,#f7c948 0%,#fad96a 100%);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  overflow:hidden;
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:700;
+  font-size:15px;
+  color:#0a0a0f;
+  letter-spacing:0;
+}
+.msg-avatar img{width:100%;height:100%;object-fit:cover;display:block}
+.msg-bubble{
+  max-width:min(540px,calc(100% - 50px));
+  padding:12px 16px;
+  border-radius:var(--radius-bubble);
+  font-size:16px;line-height:1.55;
+  overflow-wrap:anywhere;
+  word-break:break-word;
+  white-space:pre-wrap;
+}
+.msg.assistant .msg-bubble{
+  background:var(--bg-secondary);
+  color:var(--text-primary);
+  border-bottom-left-radius:4px;
+}
+.msg.user .msg-bubble{
+  background:var(--accent-yellow);
+  color:#000;
+  border-bottom-right-radius:4px;
+}
+.msg.role-change{margin-top:8px}
+.msg-system{
+  align-self:center;
+  text-align:center;
+  font-size:13px;
+  color:var(--text-muted);
+  padding:8px 14px;
+  background:rgba(255,255,255,0.03);
+  border-radius:10px;
+  max-width:420px;
+}
+.msg-system .retry-btn{
+  margin-left:8px;
+  color:var(--accent-yellow);
+  text-decoration:underline;
+  background:none;border:none;padding:0;font-size:13px;cursor:pointer;
+}
+
+/* Typing indicator */
+.typing{
+  display:inline-flex;align-items:center;gap:4px;
+  padding:14px 18px;
+}
+.typing span{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--text-muted);
+  display:inline-block;
+  animation:typingDot 1.4s infinite ease-in-out;
+}
+.typing span:nth-child(2){animation-delay:0.2s}
+.typing span:nth-child(3){animation-delay:0.4s}
+@keyframes typingDot{
+  0%,60%,100%{opacity:0.3;transform:translateY(0)}
+  30%{opacity:1;transform:translateY(-3px)}
+}
+
+/* Input bar */
+.input-bar{
+  position:sticky;bottom:0;
+  background:var(--bg-secondary);
+  border-top:1px solid var(--border-color);
+  padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+  z-index:40;
+}
+.input-bar-inner{
+  max-width:var(--max-content);
+  margin:0 auto;
+  display:flex;align-items:flex-end;gap:8px;
+  background:var(--bg-card);
+  border:1px solid var(--border-color);
+  border-radius:var(--radius-input);
+  padding:8px 8px 8px 14px;
+  transition:border-color 0.15s ease;
+}
+.input-bar-inner:focus-within{border-color:#3a3a4d}
+.chat-input{
+  flex:1;
+  background:transparent;
+  border:none;
+  outline:none;
+  resize:none;
+  font-size:16px;
+  line-height:1.45;
+  padding:8px 0;
+  min-height:24px;
+  max-height:128px;
+  color:var(--text-primary);
+}
+.chat-input::placeholder{color:var(--text-muted)}
+.send-btn{
+  width:40px;height:40px;border-radius:50%;
+  background:var(--accent-yellow);
+  display:flex;align-items:center;justify-content:center;
+  flex-shrink:0;
+  transition:background 0.15s ease,opacity 0.15s ease,transform 0.15s ease;
+}
+.send-btn:hover:not([disabled]){background:var(--accent-yellow-hover)}
+.send-btn:active:not([disabled]){transform:scale(0.94)}
+.send-btn[disabled]{background:var(--bg-card-hover);opacity:0.6;cursor:not-allowed}
+.send-btn svg{width:18px;height:18px}
+.send-btn[disabled] svg{opacity:0.5}
+
+/* CTA inside chat (готов отчёт) */
+.report-cta{
+  align-self:center;
+  margin-top:8px;
+}
+
+/* Report */
+#report{background:var(--bg-primary)}
+.report-wrap{
+  flex:1;
+  padding:24px 16px 40px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.report-card{
+  width:100%;max-width:720px;
+  background:var(--bg-card);
+  border:1px solid var(--border-color);
+  border-left:4px solid var(--accent-yellow);
+  border-radius:var(--radius-card);
+  padding:32px;
+}
+.report-card h2{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:24px;
+  margin:0 0 20px;
+}
+.report-body{
+  font-size:16px;
+  line-height:1.65;
+  color:var(--text-primary);
+}
+.report-body p{margin:0 0 14px}
+.report-body strong{color:#fff;font-weight:600}
+.report-body .md-h{
+  font-family:'Space Grotesk',sans-serif;
+  font-weight:600;
+  font-size:19px;
+  margin:22px 0 10px;
+  line-height:1.3;
+}
+.report-body .md-h:first-child{margin-top:0}
+.report-body ul,.report-body ol{
+  margin:0 0 14px;
+  padding-left:22px;
+}
+.report-body li{margin-bottom:6px}
+.report-actions{
+  width:100%;max-width:720px;
+  display:flex;gap:12px;flex-wrap:wrap;
+  margin-top:20px;
+}
+.report-actions .btn{flex:1 1 200px}
+
+/* Contact */
+#contact{background:var(--bg-primary)}
+.contact-wrap{
+  flex:1;
+  padding:32px 16px 40px;
+  display:flex;flex-direction:column;align-items:center;
+}
+.contact-card{
+  width:100%;max-width:480px;
+  background:var(--bg-card);
+  border:1px solid var(--border-color);
+  border-radius:var(--radius-card);
+  padding:32px 28px;
+}
+.contact-card h2{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:22px;font-weight:700;
+  margin:0 0 8px;
+}
+.contact-sub{
+  color:var(--text-secondary);
+  font-size:15px;
+  margin:0 0 24px;
+}
+.field{margin-bottom:16px}
+.field label{
+  display:block;font-size:13px;color:var(--text-secondary);
+  margin-bottom:6px;font-weight:500;
+}
+.field input{
+  width:100%;
+  background:var(--bg-secondary);
+  border:1px solid var(--border-color);
+  border-radius:var(--radius-input);
+  padding:12px 14px;
+  font-size:16px;
+  outline:none;
+  transition:border-color 0.15s ease,box-shadow 0.15s ease;
+}
+.field input:focus{
+  border-color:var(--accent-yellow);
+  box-shadow:0 0 0 3px rgba(247,201,72,0.15);
+}
+.field.has-error input{border-color:var(--error)}
+.field-error{
+  display:none;
+  font-size:13px;color:var(--error);
+  margin-top:6px;
+}
+.field.has-error .field-error{display:block}
+.contact-card .btn{margin-top:8px}
+.contact-back{
+  display:block;text-align:center;
+  margin-top:14px;
+  background:none;border:none;
+  color:var(--text-secondary);
+  font-size:14px;cursor:pointer;
+  padding:6px;text-decoration:underline;text-underline-offset:3px;
+}
+.spinner{
+  width:18px;height:18px;
+  border:2px solid rgba(0,0,0,0.25);
+  border-top-color:#000;
+  border-radius:50%;
+  animation:spin 0.7s linear infinite;
+  display:inline-block;
+}
+@keyframes spin{to{transform:rotate(360deg)}}
+.submit-error{
+  display:none;
+  margin-top:12px;
+  padding:10px 12px;
+  background:rgba(255,107,107,0.1);
+  border:1px solid rgba(255,107,107,0.3);
+  border-radius:10px;
+  color:var(--error);
+  font-size:13px;
+  text-align:center;
+}
+
+/* Thanks */
+#thanks{background:var(--bg-primary)}
+.thanks-wrap{
+  flex:1;
+  padding:48px 20px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+}
+.thanks-card{
+  width:100%;max-width:480px;
+  text-align:center;
+}
+.thanks-check{
+  width:80px;height:80px;
+  margin:0 auto 20px;
+  border-radius:50%;
+  background:rgba(247,201,72,0.12);
+  display:flex;align-items:center;justify-content:center;
+}
+.thanks-check svg{width:42px;height:42px;color:var(--accent-yellow)}
+.thanks-card h2{
+  font-family:'Space Grotesk',sans-serif;
+  font-size:32px;font-weight:700;
+  margin:0 0 12px;
+}
+.thanks-card p{
+  color:var(--text-secondary);
+  font-size:16px;
+  margin:0 0 28px;
+  line-height:1.55;
+}
+
+/* Responsive */
+@media (max-width:480px){
+  .topbar{height:52px;padding:0 14px}
+  .topbar-logo{width:32px;height:32px}
+  .welcome-wrap{padding:16px 16px 32px}
+  .welcome-actions.has-resume{flex-direction:column}
+  .welcome-actions .btn{width:100%}
+  .chat-list{padding:0 12px}
+  .msg-bubble{font-size:15.5px}
+  .input-bar{padding:10px 12px calc(10px + env(safe-area-inset-bottom))}
+  .report-card{padding:24px 20px}
+  .report-actions{flex-direction:column}
+  .report-actions .btn{flex:none;width:100%}
+  .contact-card{padding:24px 20px}
+}
+</style>
+</head>
+<body>
+
+<!-- Welcome -->
+<section id="welcome" class="screen" data-active>
+  <header class="topbar">
+    <img src="img/logo.png" alt="24AI" class="topbar-logo">
+    <button type="button" class="topbar-bell" data-bell aria-label="Звуковые уведомления"></button>
+  </header>
+  <div class="welcome-wrap">
+    <div class="welcome-inner">
+      <div class="welcome-badge">Бесплатная диагностика</div>
+      <h1 class="welcome-title">AI-диагностика <span class="accent">вашего бизнеса</span></h1>
+      <p class="welcome-sub">За 3-5 минут разберём, что тормозит ваш бизнес и где автоматизация принесёт максимальный эффект.</p>
+      <div class="welcome-actions" id="welcomeActions">
+        <button class="btn btn-primary btn-block" id="btnStart" type="button">Начать диагностику</button>
+      </div>
+      <ul class="welcome-pills">
+        <li>⚡ Бесплатно</li>
+        <li>🔒 Без регистрации</li>
+        <li>🤝 Без обязательств</li>
+      </ul>
+    </div>
+  </div>
+</section>
+
+<!-- Chat -->
+<section id="chat" class="screen">
+  <header class="topbar with-border">
+    <img src="img/logo.png" alt="24AI" class="topbar-logo">
+    <button type="button" class="topbar-bell" data-bell aria-label="Звуковые уведомления"></button>
+  </header>
+  <div class="chat-scroll" id="chatScroll">
+    <div class="chat-list" id="chatList"></div>
+  </div>
+  <div class="input-bar" id="inputBar">
+    <div class="input-bar-inner">
+      <textarea id="chatInput" class="chat-input" rows="1" placeholder="Напишите ответ..." aria-label="Ваше сообщение"></textarea>
+      <button class="send-btn" id="sendBtn" type="button" aria-label="Отправить" disabled>
+        <svg viewBox="0 0 24 24" fill="none" stroke="#000" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+          <path d="M12 19V5M5 12l7-7 7 7"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+<!-- Report -->
+<section id="report" class="screen">
+  <header class="topbar with-border">
+    <img src="img/logo.png" alt="24AI" class="topbar-logo">
+    <button type="button" class="topbar-bell" data-bell aria-label="Звуковые уведомления"></button>
+  </header>
+  <div class="report-wrap">
+    <div class="report-card">
+      <h2 id="reportTitle">🔍 Результаты диагностики</h2>
+      <div class="report-body" id="reportBody"></div>
+    </div>
+    <div class="report-actions">
+      <button class="btn btn-primary" id="btnContact" type="button">Оставить контакт</button>
+      <button class="btn btn-secondary" id="btnContinue" type="button">Продолжить разговор</button>
+    </div>
+  </div>
+</section>
+
+<!-- Contact -->
+<section id="contact" class="screen">
+  <header class="topbar with-border">
+    <img src="img/logo.png" alt="24AI" class="topbar-logo">
+    <button type="button" class="topbar-bell" data-bell aria-label="Звуковые уведомления"></button>
+  </header>
+  <div class="contact-wrap">
+    <div class="contact-card">
+      <h2>Оставьте контакт</h2>
+      <p class="contact-sub">Роман Сухов свяжется с вами в течение рабочего дня.</p>
+      <form id="contactForm" novalidate>
+        <div class="field" id="fName">
+          <label for="cName">Имя</label>
+          <input id="cName" name="name" type="text" autocomplete="name" required>
+          <div class="field-error">Введите имя (минимум 2 символа).</div>
+        </div>
+        <div class="field" id="fPhone">
+          <label for="cPhone">Телефон или Telegram</label>
+          <input id="cPhone" name="phone" type="text" autocomplete="tel" required placeholder="+7... или @username">
+          <div class="field-error">Введите телефон или Telegram-юзернейм.</div>
+        </div>
+        <div class="field" id="fCompany">
+          <label for="cCompany">Компания (необязательно)</label>
+          <input id="cCompany" name="company" type="text" maxlength="80" autocomplete="organization">
+          <div class="field-error">Не более 80 символов.</div>
+        </div>
+        <button class="btn btn-primary btn-block" id="btnSubmit" type="submit">Отправить</button>
+        <div class="submit-error" id="submitError">Не удалось отправить. Попробуйте ещё раз.</div>
+        <button class="contact-back" type="button" id="btnBackToReport">Назад к отчёту</button>
+      </form>
+    </div>
+  </div>
+</section>
+
+<!-- Thanks -->
+<section id="thanks" class="screen">
+  <header class="topbar with-border">
+    <img src="img/logo.png" alt="24AI" class="topbar-logo">
+    <button type="button" class="topbar-bell" data-bell aria-label="Звуковые уведомления"></button>
+  </header>
+  <div class="thanks-wrap">
+    <div class="thanks-card">
+      <div class="thanks-check" aria-hidden="true">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12l5 5L20 6"/></svg>
+      </div>
+      <h2>Спасибо!</h2>
+      <p>Заявка получена. Роман свяжется с вами в течение рабочего дня.</p>
+      <a class="btn btn-secondary btn-block" href="https://24-ai.ru/" id="thanksHome">На главную сайта 24-ai.ru</a>
+    </div>
+  </div>
+</section>
+
+<script>
+(function(){
+'use strict';
+
+const API_URL='https://api.24-ai.ru';
+
+const KEY={
+  sid:'24ai_diag_session_id',
+  screen:'24ai_diag_screen',
+  msgs:'24ai_diag_messages',
+  report:'24ai_diag_report',
+  submitted:'24ai_diag_contact_submitted',
+  startedAt:'24ai_diag_started_at',
+  sound:'24ai_diag_sound',
+};
+
+const SCREENS=['welcome','chat','report','contact','thanks'];
+
+const state={
+  sessionId:null,
+  messages:[],
+  reportText:'',
+  submitted:false,
+  pendingRequest:false,
+  lastUserMessage:null,
+  typingTimer:null,
+  pageInitialized:false,
+  soundOn:true,
+  audioCtx:null,
+};
+
+/* ---------- Sound engine (Web Audio, no files) ---------- */
+function ensureAudioCtx(){
+  if(state.audioCtx)return state.audioCtx;
+  try{
+    const Ctx=window.AudioContext||window.webkitAudioContext;
+    if(!Ctx)return null;
+    state.audioCtx=new Ctx();
+  }catch(e){
+    console.log('[24ai] AudioContext failed',e && e.message);
+    state.audioCtx=null;
+  }
+  return state.audioCtx;
+}
+function playTone(opts){
+  // Only play after the page has fully initialized (skip restore-from-localStorage on F5).
+  if(!state.pageInitialized)return;
+  if(!state.soundOn)return;
+  const ctx=state.audioCtx;
+  if(!ctx)return;
+  if(ctx.state==='suspended'){
+    try{ctx.resume()}catch(e){}
+  }
+  try{
+    const now=ctx.currentTime;
+    const osc=ctx.createOscillator();
+    const gain=ctx.createGain();
+    osc.type=opts.type||'sine';
+    if(opts.freqStart!=null && opts.freqEnd!=null){
+      osc.frequency.setValueAtTime(opts.freqStart,now);
+      osc.frequency.exponentialRampToValueAtTime(opts.freqEnd,now+opts.duration/1000);
+    }else{
+      osc.frequency.setValueAtTime(opts.freq||880,now);
+    }
+    const peak=opts.gain!=null?opts.gain:0.25;
+    gain.gain.setValueAtTime(0.0001,now);
+    gain.gain.exponentialRampToValueAtTime(peak,now+0.01);
+    gain.gain.exponentialRampToValueAtTime(0.0001,now+opts.duration/1000);
+    osc.connect(gain).connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now+opts.duration/1000+0.02);
+  }catch(e){
+    console.log('[24ai] playTone failed',e && e.message);
+  }
+}
+const Sounds={
+  newMessage(){playTone({type:'sine',freqStart:880,freqEnd:1180,duration:90,gain:0.25})},
+  finalReport(){
+    playTone({type:'sine',freq:880,duration:60,gain:0.25});
+    setTimeout(()=>playTone({type:'sine',freq:1320,duration:120,gain:0.25}),80);
+  },
+  error(){playTone({type:'square',freqStart:220,freqEnd:165,duration:200,gain:0.25})},
+};
+
+/* ---------- Bell toggle ---------- */
+const BELL_ON_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 8a6 6 0 0 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10 21a2 2 0 0 0 4 0"/></svg>';
+const BELL_OFF_SVG='<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M13.73 21a2 2 0 0 1-3.46 0"/><path d="M18.63 13A17.89 17.89 0 0 1 18 8"/><path d="M6.26 6.26A5.86 5.86 0 0 0 6 8c0 7-3 9-3 9h14"/><path d="M18 8a6 6 0 0 0-9.33-5"/><path d="M1 1l22 22"/></svg>';
+function paintBells(){
+  const bells=document.querySelectorAll('[data-bell]');
+  bells.forEach(b=>{
+    b.innerHTML=state.soundOn?BELL_ON_SVG:BELL_OFF_SVG;
+    b.classList.toggle('muted',!state.soundOn);
+    b.setAttribute('aria-label',state.soundOn?'Выключить звук':'Включить звук');
+    b.setAttribute('aria-pressed',state.soundOn?'false':'true');
+  });
+}
+function toggleSound(){
+  state.soundOn=!state.soundOn;
+  lsSet(KEY.sound,state.soundOn?'on':'off');
+  paintBells();
+}
+function bindBells(){
+  document.querySelectorAll('[data-bell]').forEach(b=>{
+    b.addEventListener('click',(e)=>{
+      ensureAudioCtx(); // any user click is a valid moment to unlock audio
+      toggleSound();
+    });
+  });
+}
+
+/* ---------- Storage helpers ---------- */
+function lsGet(k){try{return localStorage.getItem(k)}catch(e){return null}}
+function lsSet(k,v){try{localStorage.setItem(k,v)}catch(e){}}
+function lsDel(k){try{localStorage.removeItem(k)}catch(e){}}
+
+function uuidv4(){
+  if(crypto && crypto.randomUUID)return crypto.randomUUID();
+  return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g,c=>{
+    const r=(Math.random()*16)|0,v=c==='x'?r:((r&0x3)|0x8);
+    return v.toString(16);
+  });
+}
+
+function loadState(){
+  state.sessionId=lsGet(KEY.sid);
+  try{state.messages=JSON.parse(lsGet(KEY.msgs)||'[]')}catch(e){state.messages=[]}
+  // Sanitize assistant messages restored from older sessions (em-dashes etc.)
+  state.messages=state.messages.map(m=>m.role==='assistant'?Object.assign({},m,{content:humanizeText(m.content)}):m);
+  state.reportText=humanizeText(lsGet(KEY.report)||'');
+  state.submitted=lsGet(KEY.submitted)==='true';
+  const s=lsGet(KEY.sound);
+  state.soundOn=s===null?true:s==='on';
+}
+function saveMessages(){lsSet(KEY.msgs,JSON.stringify(state.messages))}
+function saveReport(){lsSet(KEY.report,state.reportText)}
+
+/* ---------- Screen switching ---------- */
+function showScreen(name){
+  SCREENS.forEach(s=>{
+    const el=document.getElementById(s);
+    if(!el)return;
+    if(s===name){el.setAttribute('data-active','')}
+    else{el.removeAttribute('data-active')}
+  });
+  lsSet(KEY.screen,name);
+  if(name==='chat'){
+    setTimeout(()=>{
+      scrollChatToBottom(false);
+      const ta=document.getElementById('chatInput');
+      if(ta && window.innerWidth>768)ta.focus();
+    },50);
+  }
+}
+
+/* ---------- Markdown parser (minimal) ---------- */
+function escapeHtml(s){
+  return s.replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+}
+/* Strip LLM tells: long em-dashes, stray markdown chars when not used as syntax. */
+function humanizeText(s){
+  if(!s)return s;
+  // " — " between words -> " - "
+  s=s.replace(/\s+—\s+/g,' - ');
+  // any remaining em-dash -> hyphen
+  s=s.replace(/—/g,'-');
+  return s;
+}
+function renderInline(s){
+  s=escapeHtml(s);
+  s=s.replace(/\*\*([^*]+?)\*\*/g,'<strong>$1</strong>');
+  return s;
+}
+function renderMarkdown(text){
+  if(!text)return '';
+  const lines=text.split(/\r?\n/);
+  let html='';
+  let i=0;
+  let listType=null; // 'ol' | 'ul'
+  let listBuf=[];
+  function flushList(){
+    if(listType){
+      html+='<'+listType+'>'+listBuf.map(li=>'<li>'+li+'</li>').join('')+'</'+listType+'>';
+      listType=null;listBuf=[];
+    }
+  }
+  function flushParagraph(buf){
+    if(buf.length){
+      html+='<p>'+buf.join('<br>')+'</p>';
+    }
+  }
+  let para=[];
+  function flushPara(){flushParagraph(para);para=[]}
+
+  while(i<lines.length){
+    const raw=lines[i];
+    const line=raw.trim();
+    if(line===''){
+      flushPara();
+      flushList();
+      i++;continue;
+    }
+    // numbered heading like "1. Что-то"
+    const numMatch=line.match(/^(\d+)\.\s+(.+)$/);
+    const bulletMatch=line.match(/^[-•]\s+(.+)$/);
+    // Detect "section heading" pattern: "1. Title" with no extra text where title is short -> render as md-h
+    if(numMatch && para.length===0){
+      // treat as numbered list item content
+      flushPara();
+      if(listType!=='ol'){flushList();listType='ol'}
+      listBuf.push(renderInline(numMatch[2]));
+      i++;continue;
+    }
+    if(bulletMatch){
+      flushPara();
+      if(listType!=='ul'){flushList();listType='ul'}
+      listBuf.push(renderInline(bulletMatch[1]));
+      i++;continue;
+    }
+    // heading detection: line starting with emoji/short and ending without dot, followed by blank?
+    // Simpler: if line has trailing ":" and is short, treat as md-h
+    flushList();
+    para.push(renderInline(line));
+    i++;
+  }
+  flushPara();
+  flushList();
+  return html;
+}
+
+/* ---------- Chat rendering ---------- */
+function chatListEl(){return document.getElementById('chatList')}
+function chatScrollEl(){return document.getElementById('chatScroll')}
+
+function scrollChatToBottom(smooth){
+  const el=chatScrollEl();
+  if(!el)return;
+  el.scrollTo({top:el.scrollHeight,behavior:smooth?'smooth':'auto'});
+}
+
+function renderMessage(msg,opts){
+  opts=opts||{};
+  const list=chatListEl();
+  const wrap=document.createElement('div');
+  wrap.className='msg '+msg.role;
+  if(opts.roleChange)wrap.classList.add('role-change');
+  if(msg.role==='assistant'){
+    wrap.appendChild(buildAvatar());
+  }
+  const bubble=document.createElement('div');
+  bubble.className='msg-bubble';
+  if(msg.role==='assistant'){
+    bubble.innerHTML=renderInlineMultiline(msg.content);
+  }else{
+    bubble.textContent=msg.content;
+  }
+  wrap.appendChild(bubble);
+  list.appendChild(wrap);
+  return wrap;
+}
+
+/* Inline render for chat bubbles: bold + line breaks, no list/heading transforms. */
+function renderInlineMultiline(text){
+  const lines=(text||'').split(/\r?\n/);
+  return lines.map(l=>renderInline(l)).join('<br>');
+}
+
+function rerenderAllMessages(){
+  const list=chatListEl();
+  list.innerHTML='';
+  let prevRole=null;
+  state.messages.forEach(m=>{
+    renderMessage(m,{roleChange:prevRole && prevRole!==m.role});
+    prevRole=m.role;
+  });
+}
+
+function buildAvatar(){
+  const av=document.createElement('div');
+  av.className='msg-avatar';
+  const img=document.createElement('img');
+  img.src='img/assistant.jpg';
+  img.alt='Ассистент 24AI';
+  img.addEventListener('error',()=>{
+    img.remove();
+    av.textContent='А';
+  });
+  av.appendChild(img);
+  return av;
+}
+
+function showTyping(){
+  hideTyping();
+  const list=chatListEl();
+  const wrap=document.createElement('div');
+  wrap.className='msg assistant';
+  wrap.id='typingMsg';
+  const av=buildAvatar();
+  const bubble=document.createElement('div');
+  bubble.className='msg-bubble';
+  bubble.innerHTML='<span class="typing"><span></span><span></span><span></span></span>';
+  bubble.style.padding='0';
+  wrap.appendChild(av);wrap.appendChild(bubble);
+  list.appendChild(wrap);
+  scrollChatToBottom(true);
+}
+function hideTyping(){
+  const t=document.getElementById('typingMsg');
+  if(t)t.remove();
+}
+
+function showSystemMessage(text,withRetry){
+  const list=chatListEl();
+  const old=list.querySelectorAll('.msg-system');
+  old.forEach(n=>n.remove());
+  const wrap=document.createElement('div');
+  wrap.className='msg-system';
+  wrap.textContent=text;
+  if(withRetry){
+    wrap.appendChild(document.createTextNode(' '));
+    const btn=document.createElement('button');
+    btn.className='retry-btn';
+    btn.type='button';
+    btn.textContent='повторить';
+    btn.addEventListener('click',()=>{
+      wrap.remove();
+      retryLastMessage();
+    });
+    wrap.appendChild(btn);
+  }
+  list.appendChild(wrap);
+  scrollChatToBottom(true);
+}
+
+/* ---------- API ---------- */
+async function apiPost(path,body){
+  const res=await fetch(API_URL+path,{
+    method:'POST',
+    headers:{'Content-Type':'application/json'},
+    body:JSON.stringify(body),
+  });
+  if(!res.ok){
+    const err=new Error('HTTP '+res.status);
+    err.status=res.status;
+    throw err;
+  }
+  return res.json();
+}
+
+async function pingHealth(){
+  try{
+    await fetch(API_URL+'/api/health',{method:'GET'});
+  }catch(e){
+    console.log('[24ai] health ping failed (non-blocking)',e && e.message);
+  }
+}
+
+/* If the backend forgot to set is_final but the assistant clearly emitted a final
+   diagnostic report, detect it client-side as a safety net. Conservative on purpose:
+   requires both the explicit header AND a closing "Рекомендация / с чего начать" cue. */
+function looksLikeFinalReport(text){
+  if(!text || text.length<600)return false;
+  const t=text.toLowerCase();
+  const hasHeader=/результат(ы|ов)? диагностики/.test(t);
+  const hasClose=/(с чего начать|рекомендаци|оставьте контакт|свяжется с вами)/.test(t);
+  return hasHeader && hasClose;
+}
+
+/* ---------- Send message flow ---------- */
+async function sendMessage(text){
+  if(!text || state.pendingRequest)return;
+  if(!state.sessionId){
+    state.sessionId=uuidv4();
+    lsSet(KEY.sid,state.sessionId);
+    lsSet(KEY.startedAt,new Date().toISOString());
+  }
+  const userMsg={role:'user',content:text,ts:Date.now()};
+  state.messages.push(userMsg);
+  saveMessages();
+  const prevRole=state.messages.length>1?state.messages[state.messages.length-2].role:null;
+  renderMessage(userMsg,{roleChange:prevRole && prevRole!=='user'});
+  scrollChatToBottom(true);
+  state.lastUserMessage=text;
+  setSendDisabled(true);
+  state.pendingRequest=true;
+
+  // typing indicator after 200ms
+  state.typingTimer=setTimeout(()=>{
+    if(state.pendingRequest)showTyping();
+  },200);
+
+  try{
+    const data=await apiPost('/api/chat',{session_id:state.sessionId,message:text});
+    clearTimeout(state.typingTimer);
+    hideTyping();
+    const reply=humanizeText((data && data.reply)||'');
+    const isFinal=!!(data && data.is_final) || looksLikeFinalReport(reply);
+    const asMsg={role:'assistant',content:reply,ts:Date.now()};
+    state.messages.push(asMsg);
+    saveMessages();
+    renderMessage(asMsg,{roleChange:true});
+    scrollChatToBottom(true);
+    if(isFinal){Sounds.finalReport()}else{Sounds.newMessage()}
+
+    if(isFinal){
+      state.reportText=reply;
+      saveReport();
+      setTimeout(()=>{showScreen('report');renderReport()},400);
+    }
+  }catch(err){
+    clearTimeout(state.typingTimer);
+    hideTyping();
+    console.error('[24ai] send failed',err);
+    Sounds.error();
+    if(err && err.status && err.status>=400 && err.status<500){
+      showSystemMessage('Что-то пошло не так. Обновите страницу.',false);
+    }else{
+      showSystemMessage('Не удалось отправить. Проверьте соединение и нажмите',true);
+    }
+  }finally{
+    state.pendingRequest=false;
+    setSendDisabled(false);
+    updateSendDisabledByInput();
+  }
+}
+
+function retryLastMessage(){
+  if(!state.lastUserMessage)return;
+  // last message in state is user's failed one — do not duplicate; re-send same text but don't re-add user bubble
+  // We need to re-send without pushing a new user message. Reuse the existing one.
+  const text=state.lastUserMessage;
+  if(state.pendingRequest)return;
+  setSendDisabled(true);
+  state.pendingRequest=true;
+  state.typingTimer=setTimeout(()=>{
+    if(state.pendingRequest)showTyping();
+  },200);
+  apiPost('/api/chat',{session_id:state.sessionId,message:text}).then(data=>{
+    clearTimeout(state.typingTimer);hideTyping();
+    const reply=humanizeText((data && data.reply)||'');
+    const isFinal=!!(data && data.is_final) || looksLikeFinalReport(reply);
+    const asMsg={role:'assistant',content:reply,ts:Date.now()};
+    state.messages.push(asMsg);
+    saveMessages();
+    renderMessage(asMsg,{roleChange:true});
+    scrollChatToBottom(true);
+    if(isFinal){Sounds.finalReport()}else{Sounds.newMessage()}
+    if(isFinal){
+      state.reportText=reply;saveReport();
+      setTimeout(()=>{showScreen('report');renderReport()},400);
+    }
+  }).catch(err=>{
+    clearTimeout(state.typingTimer);hideTyping();
+    console.error('[24ai] retry failed',err);
+    Sounds.error();
+    showSystemMessage('Не удалось отправить. Проверьте соединение и нажмите',true);
+  }).finally(()=>{
+    state.pendingRequest=false;
+    setSendDisabled(false);
+    updateSendDisabledByInput();
+  });
+}
+
+/* ---------- Input handling ---------- */
+function setSendDisabled(d){
+  const b=document.getElementById('sendBtn');
+  if(b)b.disabled=d;
+}
+function updateSendDisabledByInput(){
+  if(state.pendingRequest){setSendDisabled(true);return}
+  const ta=document.getElementById('chatInput');
+  setSendDisabled(!ta || ta.value.trim().length===0);
+}
+function autoResizeTextarea(ta){
+  ta.style.height='auto';
+  const max=128;
+  ta.style.height=Math.min(ta.scrollHeight,max)+'px';
+}
+
+/* ---------- Report rendering ---------- */
+function renderReport(){
+  const body=document.getElementById('reportBody');
+  const titleEl=document.getElementById('reportTitle');
+  let text=state.reportText||'';
+  // Try to extract first heading-like line
+  const lines=text.split(/\r?\n/);
+  let firstNonEmpty=-1;
+  for(let i=0;i<lines.length;i++){
+    if(lines[i].trim()!==''){firstNonEmpty=i;break}
+  }
+  if(firstNonEmpty>=0){
+    const head=lines[firstNonEmpty].trim();
+    // If the first line looks like a title (short, has emoji or "результат" word, no period at end)
+    const looksTitle=head.length<80 && (/[🔍📊📈✨🎯]/.test(head) || /результат/i.test(head)) && !/[.!?]$/.test(head);
+    if(looksTitle){
+      titleEl.textContent=head;
+      text=lines.slice(firstNonEmpty+1).join('\n');
+    }else{
+      titleEl.textContent='🔍 Результаты диагностики';
+    }
+  }
+  body.innerHTML=renderMarkdown(text);
+}
+
+/* ---------- Contact form ---------- */
+function validateContact(){
+  const name=document.getElementById('cName').value.trim();
+  const phone=document.getElementById('cPhone').value.trim();
+  const company=document.getElementById('cCompany').value.trim();
+  const errors={};
+  if(name.length<2)errors.name=true;
+  // phone: at least 5 chars, contains digits or @
+  if(phone.length<5 || !/[\d@]/.test(phone))errors.phone=true;
+  if(company.length>80)errors.company=true;
+  document.getElementById('fName').classList.toggle('has-error',!!errors.name);
+  document.getElementById('fPhone').classList.toggle('has-error',!!errors.phone);
+  document.getElementById('fCompany').classList.toggle('has-error',!!errors.company);
+  return {valid:Object.keys(errors).length===0,name,phone,company};
+}
+
+async function submitContact(e){
+  e.preventDefault();
+  const v=validateContact();
+  const submitErr=document.getElementById('submitError');
+  submitErr.style.display='none';
+  if(!v.valid)return;
+  const btn=document.getElementById('btnSubmit');
+  const orig=btn.innerHTML;
+  btn.disabled=true;
+  btn.innerHTML='<span class="spinner"></span>';
+  try{
+    await apiPost('/api/submit-contact',{
+      session_id:state.sessionId,
+      name:v.name,
+      phone_or_telegram:v.phone,
+      company:v.company,
+    });
+    state.submitted=true;
+    lsSet(KEY.submitted,'true');
+    showScreen('thanks');
+  }catch(err){
+    console.error('[24ai] submit-contact failed',err);
+    Sounds.error();
+    submitErr.textContent='Не удалось отправить. Попробуйте ещё раз.';
+    submitErr.style.display='block';
+  }finally{
+    btn.disabled=false;
+    btn.innerHTML=orig;
+  }
+}
+
+/* ---------- Welcome resume logic ---------- */
+function setupWelcomeButtons(){
+  const wrap=document.getElementById('welcomeActions');
+  const hasSession=!!state.sessionId && state.messages.length>0 && !state.submitted;
+  wrap.innerHTML='';
+  wrap.classList.toggle('has-resume',hasSession);
+  if(hasSession){
+    const cont=document.createElement('button');
+    cont.className='btn btn-primary';
+    cont.type='button';
+    cont.textContent='Продолжить';
+    cont.addEventListener('click',()=>{
+      ensureAudioCtx();
+      rerenderAllMessages();
+      if(state.reportText)renderReport();
+      const lastScreen=lsGet(KEY.screen);
+      if(state.reportText && (lastScreen==='report' || lastScreen==='contact')){
+        showScreen(lastScreen==='contact'?'contact':'report');
+      }else{
+        showScreen('chat');
+      }
+    });
+    const reset=document.createElement('button');
+    reset.className='btn btn-secondary';
+    reset.type='button';
+    reset.textContent='Начать заново';
+    reset.addEventListener('click',resetSession);
+    wrap.appendChild(cont);wrap.appendChild(reset);
+  }else{
+    const start=document.createElement('button');
+    start.className='btn btn-primary btn-block';
+    start.type='button';
+    start.id='btnStart';
+    start.textContent='Начать диагностику';
+    start.addEventListener('click',startNewSession);
+    wrap.appendChild(start);
+  }
+}
+
+function resetSession(){
+  Object.values(KEY).forEach(lsDel);
+  state.sessionId=null;
+  state.messages=[];
+  state.reportText='';
+  state.submitted=false;
+  state.lastUserMessage=null;
+  chatListEl().innerHTML='';
+  setupWelcomeButtons();
+  showScreen('welcome');
+}
+
+async function startNewSession(){
+  ensureAudioCtx();
+  state.sessionId=uuidv4();
+  lsSet(KEY.sid,state.sessionId);
+  lsSet(KEY.startedAt,new Date().toISOString());
+  state.messages=[];
+  saveMessages();
+  chatListEl().innerHTML='';
+  showScreen('chat');
+  // trigger initial assistant greeting via hidden starter ("Здравствуйте" not stored locally,
+  // but sent to backend so server-side history opens correctly)
+  setSendDisabled(true);
+  state.pendingRequest=true;
+  state.typingTimer=setTimeout(()=>{if(state.pendingRequest)showTyping()},200);
+  try{
+    const data=await apiPost('/api/chat',{session_id:state.sessionId,message:'Здравствуйте'});
+    clearTimeout(state.typingTimer);hideTyping();
+    const reply=humanizeText((data && data.reply)||'');
+    const isFinal=!!(data && data.is_final) || looksLikeFinalReport(reply);
+    if(reply){
+      const asMsg={role:'assistant',content:reply,ts:Date.now()};
+      state.messages.push(asMsg);saveMessages();
+      renderMessage(asMsg,{});
+      scrollChatToBottom(true);
+      if(isFinal){Sounds.finalReport()}else{Sounds.newMessage()}
+    }
+    if(isFinal){
+      state.reportText=reply;saveReport();
+      setTimeout(()=>{showScreen('report');renderReport()},400);
+    }
+  }catch(err){
+    clearTimeout(state.typingTimer);hideTyping();
+    console.error('[24ai] greeting failed',err);
+    Sounds.error();
+    showSystemMessage('Не удалось загрузить ассистента. Обновите страницу.',false);
+  }finally{
+    state.pendingRequest=false;
+    updateSendDisabledByInput();
+  }
+}
+
+/* ---------- Visual viewport (mobile keyboard) ---------- */
+function setupViewportFix(){
+  if(!window.visualViewport)return;
+  const update=()=>{
+    const vh=window.visualViewport.height;
+    document.documentElement.style.setProperty('--vh',vh+'px');
+  };
+  update();
+  window.visualViewport.addEventListener('resize',update);
+  window.visualViewport.addEventListener('scroll',update);
+}
+
+/* ---------- Init ---------- */
+function init(){
+  loadState();
+
+  // Restore screen
+  const savedScreen=lsGet(KEY.screen);
+  if(state.submitted){
+    // Always go to thanks if contact submitted
+    showScreen('thanks');
+  }else if(savedScreen && SCREENS.indexOf(savedScreen)>=0 && state.sessionId && state.messages.length){
+    rerenderAllMessages();
+    if(state.reportText){
+      renderReport();
+    }
+    if(savedScreen==='welcome'){
+      setupWelcomeButtons();
+      showScreen('welcome');
+    }else{
+      showScreen(savedScreen);
+    }
+  }else{
+    setupWelcomeButtons();
+    showScreen('welcome');
+  }
+
+  // Bind static handlers
+  const btnStart=document.getElementById('btnStart');
+  if(btnStart)btnStart.addEventListener('click',startNewSession);
+
+  const ta=document.getElementById('chatInput');
+  ta.addEventListener('input',()=>{
+    autoResizeTextarea(ta);
+    updateSendDisabledByInput();
+  });
+  ta.addEventListener('keydown',(e)=>{
+    if(e.key==='Enter' && !e.shiftKey){
+      e.preventDefault();
+      const text=ta.value.trim();
+      if(text && !state.pendingRequest){
+        ta.value='';
+        autoResizeTextarea(ta);
+        updateSendDisabledByInput();
+        sendMessage(text);
+      }
+    }
+  });
+  document.getElementById('sendBtn').addEventListener('click',()=>{
+    const text=ta.value.trim();
+    if(text && !state.pendingRequest){
+      ta.value='';
+      autoResizeTextarea(ta);
+      updateSendDisabledByInput();
+      sendMessage(text);
+    }
+  });
+
+  document.getElementById('btnContact').addEventListener('click',()=>{
+    showScreen('contact');
+  });
+  document.getElementById('btnContinue').addEventListener('click',()=>{
+    showScreen('chat');
+    setTimeout(()=>scrollChatToBottom(true),50);
+  });
+  document.getElementById('btnBackToReport').addEventListener('click',()=>{
+    showScreen('report');
+  });
+  document.getElementById('contactForm').addEventListener('submit',submitContact);
+
+  // Re-validate on input changes (clear errors as user types)
+  ['cName','cPhone','cCompany'].forEach(id=>{
+    const el=document.getElementById(id);
+    if(!el)return;
+    el.addEventListener('input',()=>{
+      const f=el.closest('.field');
+      if(f)f.classList.remove('has-error');
+    });
+  });
+
+  setupViewportFix();
+  updateSendDisabledByInput();
+
+  paintBells();
+  bindBells();
+
+  // mark page as initialized AFTER state restoration so restore-from-localStorage
+  // does not trigger any sound effects.
+  state.pageInitialized=true;
+
+  // health ping after 1s
+  setTimeout(pingHealth,1000);
+}
+
+if(document.readyState==='loading'){
+  document.addEventListener('DOMContentLoaded',init);
+}else{
+  init();
+}
+})();
+</script>
+</body>
+</html>

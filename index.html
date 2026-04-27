@@ -385,6 +385,96 @@
             color: var(--text-primary);
         }
 
+        /* AI Diagnostics CTA */
+        .diag-cta {
+            padding: 60px 0;
+            background: var(--bg-primary);
+        }
+        .diag-cta-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 36px 40px;
+            display: flex;
+            align-items: center;
+            gap: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+        .diag-cta-card::before {
+            content: "";
+            position: absolute;
+            top: 0; left: 0; bottom: 0;
+            width: 4px;
+            background: var(--accent-yellow);
+        }
+        .diag-cta-text {
+            flex: 1;
+            min-width: 0;
+        }
+        .diag-cta-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            background: rgba(247, 201, 72, 0.12);
+            border: 1px solid rgba(247, 201, 72, 0.3);
+            border-radius: 100px;
+            font-size: 12px;
+            font-weight: 500;
+            color: var(--accent-yellow);
+            margin-bottom: 12px;
+            letter-spacing: 0.02em;
+        }
+        .diag-cta-title {
+            font-family: 'Space Grotesk', sans-serif;
+            font-weight: 700;
+            font-size: 28px;
+            line-height: 1.2;
+            margin: 0 0 10px;
+            color: var(--text-primary);
+        }
+        .diag-cta-sub {
+            color: var(--text-secondary);
+            font-size: 16px;
+            line-height: 1.55;
+            margin: 0;
+            max-width: 640px;
+        }
+        .diag-cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 14px 24px;
+            background: var(--accent-yellow);
+            color: #000;
+            font-weight: 600;
+            font-size: 16px;
+            border-radius: 12px;
+            text-decoration: none;
+            transition: background 0.15s ease, transform 0.15s ease;
+            white-space: nowrap;
+            flex-shrink: 0;
+        }
+        .diag-cta-btn:hover {
+            background: var(--accent-yellow-hover);
+        }
+        .diag-cta-btn:active {
+            transform: scale(0.98);
+        }
+        @media (max-width: 768px) {
+            .diag-cta { padding: 40px 0; }
+            .diag-cta-card {
+                flex-direction: column;
+                align-items: stretch;
+                padding: 28px 24px;
+                gap: 20px;
+            }
+            .diag-cta-title { font-size: 22px; }
+            .diag-cta-sub { font-size: 15px; }
+            .diag-cta-btn { justify-content: center; }
+        }
+
         /* Pain Section */
         .pain-section {
             padding: 100px 0;
@@ -1989,6 +2079,7 @@
                     <img src="img/logo.png" alt="24AI" class="logo-img">
                 </a>
                 <nav class="nav">
+                    <a href="diagnostika.html" class="nav-link">Диагностика</a>
                     <a href="#cases" class="nav-link">Кейсы</a>
                     <a href="#benefits" class="nav-link">Решения</a>
                     <a href="#for-who" class="nav-link">Для кого</a>
@@ -2069,6 +2160,23 @@
                         <div class="floating-card-value">150+ процессов</div>
                     </div>
                 </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- AI Diagnostics CTA -->
+    <section class="diag-cta">
+        <div class="container">
+            <div class="diag-cta-card">
+                <div class="diag-cta-text">
+                    <span class="diag-cta-badge">Бесплатная диагностика</span>
+                    <h2 class="diag-cta-title">AI-диагностика бизнеса за 3 минуты</h2>
+                    <p class="diag-cta-sub">Бесплатная диагностика от Ассистента 24AI: разберём ваши процессы и покажем, где автоматизация принесёт максимальный эффект. Без регистрации, без обязательств.</p>
+                </div>
+                <a href="diagnostika.html" class="diag-cta-btn">
+                    Начать диагностику
+                    <svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M5 12h14M13 5l7 7-7 7"/></svg>
+                </a>
             </div>
         </div>
     </section>
