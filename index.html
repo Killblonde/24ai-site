@@ -2859,7 +2859,10 @@
                 container.innerHTML = cases.map(c => {
                     // Определяем превью: видео или картинка
                     let imageContent = '';
+                    let hasVideo = false;
+                    
                     if (c.video_url) {
+                        hasVideo = true;
                         // Извлекаем превью YouTube
                         const ytMatch = c.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/);
                         if (ytMatch) {
@@ -2868,31 +2871,41 @@
                         // Rutube - используем thumbnail_url или cover_url
                         const rtMatch = c.video_url.match(/rutube\.ru\/video\/([a-zA-Z0-9]+)/);
                         if (rtMatch) {
-                            imageContent = c.thumbnail_url || c.cover_url 
-                                ? `<img src="${c.thumbnail_url || c.cover_url}" alt="${c.title}" style="width:100%;height:100%;object-fit:cover;">`
-                                : `<span>🎬</span>`;
+                            if (c.thumbnail_url || c.cover_url) {
+                                imageContent = `<img src="${c.thumbnail_url || c.cover_url}" alt="${c.title}" style="width:100%;height:100%;object-fit:cover;">`;
+                            }
                         }
                         // VK Video
                         if (c.video_url.includes('vk.com') || c.video_url.includes('vkvideo.ru')) {
-                            imageContent = c.thumbnail_url || c.cover_url
-                                ? `<img src="${c.thumbnail_url || c.cover_url}" alt="${c.title}" style="width:100%;height:100%;object-fit:cover;">`
-                                : `<span>🎬</span>`;
+                            if (c.thumbnail_url || c.cover_url) {
+                                imageContent = `<img src="${c.thumbnail_url || c.cover_url}" alt="${c.title}" style="width:100%;height:100%;object-fit:cover;">`;
+                            }
                         }
-                    } else if (c.cover_url) {
-                        imageContent = `<img src="${c.cover_url}" alt="${c.title}" style="width:100%;height:100%;object-fit:cover;">`;
-                    } else if (c.thumbnail_url) {
-                        imageContent = `<img src="${c.thumbnail_url}" alt="${c.title}" style="width:100%;height:100%;object-fit:cover;">`;
-                    } else {
-                        imageContent = `<span>📁</span>`;
                     }
+                    
+                    // Если есть картинка (и нет видео контента), используем её
+                    if (!imageContent && c.cover_url) {
+                        imageContent = `<img src="${c.cover_url}" alt="${c.title}" style="width:100%;height:100%;object-fit:cover;">`;
+                    } else if (!imageContent && c.thumbnail_url) {
+                        imageContent = `<img src="${c.thumbnail_url}" alt="${c.title}" style="width:100%;height:100%;object-fit:cover;">`;
+                    }
+                    
+                    // Если ничего нет - показываем плейсхолдер
+                    if (!imageContent) {
+                        imageContent = `<div style="width:100%;height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);"><span style="font-size:48px;">${hasVideo ? '🎬' : '📁'}</span></div>`;
+                    }
+                    
+                    // Добавляем иконку play для видео
+                    const playIcon = hasVideo ? `<div style="position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);width:60px;height:60px;background:rgba(0,0,0,0.7);border-radius:50%;display:flex;align-items:center;justify-content:center;"><span style="font-size:24px;margin-left:4px;">▶</span></div>` : '';
                     
                     // Первый результат как основной
                     const mainResult = c.results && c.results.length > 0 ? c.results[0] : (c.result || '');
                     
                     return `
                         <a href="case.html?slug=${c.slug}" class="case-card">
-                            <div class="case-image">
+                            <div class="case-image" style="position:relative;">
                                 ${imageContent}
+                                ${playIcon}
                             </div>
                             <div class="case-content">
                                 <h3>${c.title}</h3>
