@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Кейс — 24AI</title>
+    <meta name="description" content="">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0f;
+            --bg-card: #1a1a24;
+            --gold: #D4A853;
+            --gold-hover: #e5b966;
+            --text-primary: #ffffff;
+            --text-secondary: #a0a0b0;
+            --border-color: #2a2a3a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            line-height: 1.7;
+        }
+
+        h1, h2, h3 { font-family: 'Space Grotesk', sans-serif; }
+
+        .container { max-width: 900px; margin: 0 auto; padding: 0 24px; }
+
+        /* Header */
+        .header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 16px 0;
+            background: rgba(10,10,15,0.95);
+            backdrop-filter: blur(20px);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            text-decoration: none;
+        }
+
+        .logo-img {
+            height: 40px;
+            width: auto;
+        }
+
+        .nav {
+            display: flex;
+            gap: 32px;
+        }
+
+        .nav a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 14px;
+            transition: color 0.3s;
+        }
+
+        .nav a:hover {
+            color: var(--text-primary);
+        }
+
+        .btn {
+            display: inline-block;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.3s;
+            text-align: center;
+        }
+
+        .btn-primary {
+            background: var(--gold);
+            color: #000 !important;
+        }
+
+        .btn-primary:hover {
+            background: var(--gold-hover);
+        }
+
+        /* Case Page */
+        .case-page {
+            padding-top: 100px;
+            min-height: 100vh;
+        }
+
+        .case-header {
+            padding: 40px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .case-back {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--gold);
+            text-decoration: none;
+            font-size: 14px;
+            margin-bottom: 24px;
+        }
+
+        .case-back:hover {
+            opacity: 0.8;
+        }
+
+        .case-meta {
+            color: var(--text-secondary);
+            font-size: 14px;
+            margin-bottom: 16px;
+        }
+
+        .case-title {
+            font-size: clamp(28px, 5vw, 42px);
+            margin-bottom: 16px;
+            line-height: 1.2;
+        }
+
+        .case-description {
+            font-size: 18px;
+            color: var(--text-secondary);
+            max-width: 700px;
+        }
+
+        /* Video/Image Container */
+        .case-media {
+            margin: 40px 0;
+            border-radius: 16px;
+            overflow: hidden;
+            background: var(--bg-card);
+        }
+
+        .case-media img {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
+
+        .case-media iframe {
+            width: 100%;
+            aspect-ratio: 16/9;
+            border: none;
+        }
+
+        /* Results */
+        .case-results {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin: 40px 0;
+            padding: 30px;
+            background: var(--bg-card);
+            border-radius: 16px;
+        }
+
+        .result-item {
+            text-align: center;
+            padding: 20px;
+        }
+
+        .result-value {
+            font-family: 'Space Grotesk', sans-serif;
+            font-size: 20px;
+            font-weight: 700;
+            color: var(--gold);
+        }
+
+        /* Content */
+        .case-content {
+            padding: 40px 0;
+        }
+
+        .case-content h2 {
+            font-size: 28px;
+            margin: 40px 0 20px;
+            color: var(--text-primary);
+        }
+
+        .case-content h3 {
+            font-size: 22px;
+            margin: 32px 0 16px;
+            color: var(--text-primary);
+        }
+
+        .case-content p {
+            margin-bottom: 20px;
+            color: var(--text-secondary);
+        }
+
+        .case-content ul, .case-content ol {
+            margin: 20px 0;
+            padding-left: 24px;
+            color: var(--text-secondary);
+        }
+
+        .case-content li {
+            margin-bottom: 10px;
+        }
+
+        .case-content img {
+            max-width: 100%;
+            border-radius: 12px;
+            margin: 24px 0;
+        }
+
+        .case-content blockquote {
+            border-left: 4px solid var(--gold);
+            padding-left: 20px;
+            margin: 24px 0;
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+
+        /* CTA */
+        .case-cta {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            margin: 60px 0;
+        }
+
+        .case-cta h3 {
+            margin-bottom: 12px;
+        }
+
+        .case-cta p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .case-cta .btn {
+            display: inline-block;
+            padding: 16px 32px;
+            font-size: 16px;
+        }
+
+        /* Footer */
+        .footer {
+            background: var(--bg-card);
+            padding: 40px 0;
+            text-align: center;
+            color: var(--text-secondary);
+        }
+
+        .footer a {
+            color: var(--gold);
+            text-decoration: none;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 100px 20px;
+            color: var(--text-secondary);
+        }
+
+        /* Not Found */
+        .not-found {
+            text-align: center;
+            padding: 100px 20px;
+        }
+
+        .not-found h1 {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .not-found p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .nav {
+                display: none;
+            }
+
+            .case-title {
+                font-size: 28px;
+            }
+
+            .case-results {
+                grid-template-columns: 1fr 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <div class="header-container">
+            <a href="index.html" class="logo">
+                <img src="img/logo.png" alt="24AI" class="logo-img">
+            </a>
+            <nav class="nav">
+                <a href="index.html#cases">Кейсы</a>
+                <a href="index.html#benefits">Решения</a>
+                <a href="index.html#for-who">Для кого</a>
+                <a href="articles.html">Статьи</a>
+                <a href="index.html#faq">FAQ</a>
+            </nav>
+            <a href="index.html#contact" class="btn btn-primary">Связаться</a>
+        </div>
+    </header>
+
+    <main class="case-page">
+        <div class="container">
+            <div id="casePage">
+                <div class="loading">Загрузка кейса...</div>
+            </div>
+        </div>
+    </main>
+
+    <footer class="footer">
+        <div class="container">
+            <p>© 2025 24AI. <a href="index.html">Вернуться на главную</a></p>
+        </div>
+    </footer>
+
+    <script>
+        const SUPABASE_URL = 'https://ulbgnmtevhyglebfkzil.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVsYmdubXRldmh5Z2xlYmZremlsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjY5NDA4ODgsImV4cCI6MjA4MjUxNjg4OH0.EkCsEUJuQ9XKnaoefPv73MKXf5y74Ts3XiDTcWalOpk';
+
+        async function loadCase() {
+            const params = new URLSearchParams(window.location.search);
+            const slug = params.get('slug');
+
+            if (!slug) {
+                showNotFound();
+                return;
+            }
+
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/cases?slug=eq.${slug}&published=eq.true`, {
+                    headers: { 'apikey': SUPABASE_ANON_KEY }
+                });
+                const cases = await response.json();
+
+                if (cases.length === 0) {
+                    showNotFound();
+                    return;
+                }
+
+                const caseData = cases[0];
+                displayCase(caseData);
+            } catch (error) {
+                console.error('Error loading case:', error);
+                showNotFound();
+            }
+        }
+
+        function showNotFound() {
+            document.getElementById('casePage').innerHTML = `
+                <div class="not-found">
+                    <h1>404</h1>
+                    <p>Кейс не найден</p>
+                    <a href="index.html#cases" class="btn btn-primary">Смотреть все кейсы</a>
+                </div>
+            `;
+        }
+
+        function displayCase(caseData) {
+            document.title = `${caseData.title} — Кейс 24AI`;
+            document.querySelector('meta[name="description"]').content = caseData.description || '';
+
+            let mediaHtml = '';
+            
+            // Видео
+            if (caseData.video_url) {
+                // YouTube
+                const ytMatch = caseData.video_url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/);
+                if (ytMatch) {
+                    mediaHtml = `<iframe src="https://www.youtube.com/embed/${ytMatch[1]}" allowfullscreen></iframe>`;
+                }
+                
+                // Rutube
+                const rtMatch = caseData.video_url.match(/rutube\.ru\/video\/([a-zA-Z0-9]+)/);
+                if (rtMatch) {
+                    mediaHtml = `<iframe src="https://rutube.ru/play/embed/${rtMatch[1]}" allowfullscreen></iframe>`;
+                }
+                
+                // VK Video
+                const vkMatch = caseData.video_url.match(/vk\.com\/video(-?\d+)_(\d+)/);
+                if (vkMatch) {
+                    mediaHtml = `<iframe src="https://vk.com/video_ext.php?oid=${vkMatch[1]}&id=${vkMatch[2]}" allowfullscreen></iframe>`;
+                }
+            } 
+            // Картинка
+            else if (caseData.cover_url) {
+                mediaHtml = `<img src="${caseData.cover_url}" alt="${caseData.title}">`;
+            } else if (caseData.thumbnail_url) {
+                mediaHtml = `<img src="${caseData.thumbnail_url}" alt="${caseData.title}">`;
+            }
+
+            // Результаты
+            let resultsHtml = '';
+            const results = caseData.results || [];
+            if (results.length > 0) {
+                resultsHtml = `
+                    <div class="case-results">
+                        ${results.map(r => `
+                            <div class="result-item">
+                                <div class="result-value">${r}</div>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+
+            // Контент из Editor.js
+            let contentHtml = '';
+            if (caseData.content) {
+                try {
+                    const content = JSON.parse(caseData.content);
+                    contentHtml = renderEditorContent(content);
+                } catch (e) {
+                    console.error('Error parsing content:', e);
+                }
+            }
+
+            document.getElementById('casePage').innerHTML = `
+                <div class="case-header">
+                    <a href="index.html#cases" class="case-back">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                            <path d="M15 18l-6-6 6-6"/>
+                        </svg>
+                        Все кейсы
+                    </a>
+                    ${caseData.client ? `<div class="case-meta">Клиент: ${caseData.client}</div>` : ''}
+                    <h1 class="case-title">${caseData.title}</h1>
+                    ${caseData.description ? `<p class="case-description">${caseData.description}</p>` : ''}
+                </div>
+                
+                ${mediaHtml ? `<div class="case-media">${mediaHtml}</div>` : ''}
+                
+                ${resultsHtml}
+                
+                <div class="case-content">
+                    ${contentHtml}
+                </div>
+                
+                <div class="case-cta">
+                    <h3>Хотите такой же результат?</h3>
+                    <p>Оставьте заявку, и мы проведём бесплатный аудит ваших процессов</p>
+                    <a href="index.html#contact" class="btn btn-primary">Оставить заявку</a>
+                </div>
+            `;
+        }
+
+        function renderEditorContent(content) {
+            if (!content.blocks) return '';
+
+            return content.blocks.map(block => {
+                switch (block.type) {
+                    case 'header':
+                        return `<h${block.data.level}>${block.data.text}</h${block.data.level}>`;
+                    
+                    case 'paragraph':
+                        return `<p>${block.data.text}</p>`;
+                    
+                    case 'list':
+                        const tag = block.data.style === 'ordered' ? 'ol' : 'ul';
+                        return `<${tag}>${block.data.items.map(item => `<li>${item}</li>`).join('')}</${tag}>`;
+                    
+                    case 'quote':
+                        return `<blockquote>${block.data.text}</blockquote>`;
+                    
+                    case 'image':
+                        return `<img src="${block.data.file?.url || block.data.url}" alt="${block.data.caption || ''}">`;
+                    
+                    case 'delimiter':
+                        return '<hr style="border: none; border-top: 1px solid var(--border-color); margin: 40px 0;">';
+                    
+                    default:
+                        return '';
+                }
+            }).join('');
+        }
+
+        loadCase();
+    </script>
+</body>
+</html>

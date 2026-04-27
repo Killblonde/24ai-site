@@ -1,0 +1,1254 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Админ-панель — 24AI</title>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/editorjs@2.28.2/dist/editorjs.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/header@2.8.1/dist/header.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/list@1.9.0/dist/list.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/quote@2.6.0/dist/quote.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/image@2.9.0/dist/image.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@editorjs/delimiter@1.4.0/dist/delimiter.umd.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0f;
+            color: #e0e0e0;
+            min-height: 100vh;
+        }
+
+        /* Login Screen */
+        .login-screen {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: #1a1a24;
+            padding: 40px;
+            border-radius: 16px;
+            width: 100%;
+            max-width: 400px;
+        }
+
+        .login-box h1 {
+            margin-bottom: 24px;
+            color: #fff;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px 16px;
+            background: #2a2a3a;
+            border: 1px solid #3a3a4a;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+            margin-bottom: 16px;
+        }
+
+        .login-box button {
+            width: 100%;
+            padding: 12px;
+            background: #d4a855;
+            color: #000;
+            border: none;
+            border-radius: 8px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .login-box button:hover {
+            background: #e5b966;
+        }
+
+        .login-error {
+            color: #ff6b6b;
+            margin-bottom: 16px;
+            display: none;
+        }
+
+        /* Admin Panel */
+        .admin-panel {
+            display: none;
+            min-height: 100vh;
+        }
+
+        .admin-header {
+            background: #1a1a24;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2a2a3a;
+        }
+
+        .admin-header h1 {
+            font-size: 20px;
+            color: #d4a855;
+        }
+
+        .admin-header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: #d4a855;
+            color: #000;
+        }
+
+        .btn-primary:hover {
+            background: #e5b966;
+        }
+
+        .btn-secondary {
+            background: #2a2a3a;
+            color: #fff;
+        }
+
+        .btn-secondary:hover {
+            background: #3a3a4a;
+        }
+
+        .btn-danger {
+            background: #ff4757;
+            color: #fff;
+        }
+
+        .btn-danger:hover {
+            background: #ff6b7a;
+        }
+
+        .admin-content {
+            padding: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        /* Articles List */
+        .articles-list {
+            display: grid;
+            gap: 16px;
+        }
+
+        .article-item {
+            background: #1a1a24;
+            border-radius: 12px;
+            padding: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .article-info h3 {
+            color: #fff;
+            margin-bottom: 4px;
+        }
+
+        .article-info p {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .article-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            margin-left: 12px;
+        }
+
+        .status-published {
+            background: #2ed573;
+            color: #000;
+        }
+
+        .status-draft {
+            background: #ffa502;
+            color: #000;
+        }
+
+        .article-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .no-articles {
+            text-align: center;
+            padding: 60px 20px;
+            color: #888;
+        }
+
+        /* Editor Screen */
+        .editor-screen {
+            display: none;
+        }
+
+        .editor-header {
+            background: #1a1a24;
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 1px solid #2a2a3a;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+
+        .editor-content {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            margin-bottom: 8px;
+            color: #ccc;
+            font-size: 14px;
+        }
+
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            background: #1a1a24;
+            border: 1px solid #2a2a3a;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 16px;
+        }
+
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: #d4a855;
+        }
+
+        .cover-upload {
+            border: 2px dashed #3a3a4a;
+            border-radius: 12px;
+            padding: 40px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .cover-upload:hover {
+            border-color: #d4a855;
+        }
+
+        .cover-upload.has-image {
+            padding: 0;
+            border: none;
+        }
+
+        .cover-upload img {
+            width: 100%;
+            border-radius: 12px;
+        }
+
+        .cover-upload input {
+            display: none;
+        }
+
+        /* Editor.js Styles */
+        .editor-container {
+            background: #1a1a24;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 400px;
+        }
+
+        .codex-editor {
+            color: #e0e0e0;
+        }
+
+        .ce-block__content,
+        .ce-toolbar__content {
+            max-width: 100%;
+        }
+
+        .cdx-block {
+            padding: 8px 0;
+        }
+
+        .ce-paragraph {
+            color: #e0e0e0;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .ce-header {
+            color: #fff;
+        }
+
+        .cdx-quote__text {
+            color: #ccc;
+            border-left: 3px solid #d4a855;
+            padding-left: 16px;
+        }
+
+        .ce-toolbar__plus,
+        .ce-toolbar__settings-btn {
+            color: #888;
+            background: #2a2a3a;
+        }
+
+        .ce-inline-toolbar,
+        .ce-conversion-toolbar,
+        .ce-settings {
+            background: #2a2a3a;
+            border: 1px solid #3a3a4a;
+        }
+
+        .ce-inline-tool,
+        .ce-conversion-tool,
+        .ce-settings__button {
+            color: #e0e0e0;
+        }
+
+        .ce-inline-tool:hover,
+        .ce-conversion-tool:hover,
+        .ce-settings__button:hover {
+            background: #3a3a4a;
+        }
+
+        .image-tool__image {
+            border-radius: 8px;
+            overflow: hidden;
+        }
+
+        .image-tool__caption {
+            color: #888;
+            font-size: 14px;
+        }
+
+        /* Tabs */
+        .admin-tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+        }
+
+        .admin-tab {
+            padding: 10px 20px;
+            background: #1a1a24;
+            border: none;
+            border-radius: 8px;
+            color: #888;
+            cursor: pointer;
+            font-size: 14px;
+        }
+
+        .admin-tab.active {
+            background: #d4a855;
+            color: #000;
+        }
+
+        /* Reviews Management */
+        .review-item {
+            background: #1a1a24;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .review-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+        }
+
+        .review-author {
+            font-weight: 600;
+            color: #fff;
+        }
+
+        .review-company {
+            color: #888;
+            font-size: 14px;
+        }
+
+        .review-text {
+            color: #ccc;
+            margin-bottom: 12px;
+        }
+
+        .review-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #888;
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div class="login-screen" id="loginScreen">
+        <div class="login-box">
+            <h1>🔐 Вход в админку</h1>
+            <p class="login-error" id="loginError">Неверный пароль</p>
+            <input type="password" id="passwordInput" placeholder="Введите пароль" onkeypress="if(event.key==='Enter')login()">
+            <button onclick="login()">Войти</button>
+        </div>
+    </div>
+
+    <!-- Admin Panel -->
+    <div class="admin-panel" id="adminPanel">
+        <div class="admin-header">
+            <h1>24AI Админка</h1>
+            <div class="admin-header-actions">
+                <a href="index.html" class="btn btn-secondary">← На сайт</a>
+                <button class="btn btn-secondary" onclick="logout()">Выйти</button>
+            </div>
+        </div>
+
+        <div class="admin-content" id="adminContent">
+            <div class="admin-tabs">
+                <button class="admin-tab active" onclick="showTab('articles')">📝 Статьи</button>
+                <button class="admin-tab" onclick="showTab('cases')">💼 Кейсы</button>
+                <button class="admin-tab" onclick="showTab('reviews')">⭐ Отзывы</button>
+                <button class="admin-tab" onclick="showTab('leads')">📨 Заявки</button>
+            </div>
+
+            <!-- Articles Tab -->
+            <div id="articlesTab">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h2>Статьи</h2>
+                    <button class="btn btn-primary" onclick="showEditor()">+ Новая статья</button>
+                </div>
+                <div class="articles-list" id="articlesList">
+                    <div class="loading">Загрузка...</div>
+                </div>
+            </div>
+
+            <!-- Cases Tab -->
+            <div id="casesTab" style="display: none;">
+                <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+                    <h2>Кейсы</h2>
+                    <button class="btn btn-primary" onclick="showCaseEditor()">+ Новый кейс</button>
+                </div>
+                <div class="articles-list" id="casesList">
+                    <div class="loading">Загрузка...</div>
+                </div>
+            </div>
+
+            <!-- Reviews Tab -->
+            <div id="reviewsTab" style="display: none;">
+                <h2 style="margin-bottom: 24px;">Отзывы на модерации</h2>
+                <div id="reviewsList">
+                    <div class="loading">Загрузка...</div>
+                </div>
+            </div>
+
+            <!-- Leads Tab -->
+            <div id="leadsTab" style="display: none;">
+                <h2 style="margin-bottom: 24px;">Заявки</h2>
+                <div id="leadsList">
+                    <div class="loading">Загрузка...</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Editor Screen -->
+    <div class="editor-screen" id="editorScreen">
+        <div class="editor-header">
+            <button class="btn btn-secondary" onclick="hideEditor()">← Назад</button>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-secondary" onclick="saveArticle(false)">Сохранить черновик</button>
+                <button class="btn btn-primary" onclick="saveArticle(true)">Опубликовать</button>
+            </div>
+        </div>
+
+        <div class="editor-content">
+            <input type="hidden" id="articleId">
+            
+            <div class="form-group">
+                <label>Заголовок статьи</label>
+                <input type="text" id="articleTitle" placeholder="Как автоматизировать бизнес с помощью ИИ">
+            </div>
+
+            <div class="form-group">
+                <label>URL (slug) — для SEO</label>
+                <input type="text" id="articleSlug" placeholder="kak-avtomatizirovat-biznes">
+            </div>
+
+            <div class="form-group">
+                <label>SEO описание (meta description)</label>
+                <textarea id="articleDescription" rows="2" placeholder="Краткое описание для поисковиков (150-160 символов)"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Обложка статьи</label>
+                <div class="cover-upload" id="coverUpload" onclick="document.getElementById('coverInput').click()">
+                    <input type="file" id="coverInput" accept="image/*" onchange="uploadCover(this)">
+                    <p>📷 Нажмите чтобы загрузить обложку</p>
+                </div>
+                <input type="hidden" id="coverUrl">
+            </div>
+
+            <div class="form-group">
+                <label>Содержание статьи</label>
+                <div class="editor-container">
+                    <div id="editorjs"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Case Editor Screen -->
+    <div class="editor-screen" id="caseEditorScreen">
+        <div class="editor-header">
+            <button class="btn btn-secondary" onclick="hideCaseEditor()">← Назад</button>
+            <div style="display: flex; gap: 12px;">
+                <button class="btn btn-secondary" onclick="saveCase(false)">Сохранить черновик</button>
+                <button class="btn btn-primary" onclick="saveCase(true)">Опубликовать</button>
+            </div>
+        </div>
+
+        <div class="editor-content">
+            <input type="hidden" id="caseId">
+            
+            <div class="form-group">
+                <label>Название кейса</label>
+                <input type="text" id="caseTitle" placeholder="Автоматизация отдела продаж для компании X">
+            </div>
+
+            <div class="form-group">
+                <label>URL (slug)</label>
+                <input type="text" id="caseSlug" placeholder="avtomatizaciya-otdela-prodazh">
+            </div>
+
+            <div class="form-group">
+                <label>Краткое описание (для карточки)</label>
+                <textarea id="caseDescription" rows="2" placeholder="Внедрили CRM-бота, который увеличил конверсию на 40%"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Тип обложки</label>
+                <div style="display: flex; gap: 12px; margin-bottom: 12px;">
+                    <button type="button" class="btn btn-secondary" id="coverTypeImage" onclick="setCoverType('image')" style="flex:1">🖼️ Картинка</button>
+                    <button type="button" class="btn btn-secondary" id="coverTypeVideo" onclick="setCoverType('video')" style="flex:1">🎬 Видео</button>
+                </div>
+            </div>
+
+            <div class="form-group" id="caseImageUploadGroup">
+                <label>Обложка кейса (16:9)</label>
+                <div class="cover-upload" id="caseCoverUpload" onclick="document.getElementById('caseCoverInput').click()">
+                    <input type="file" id="caseCoverInput" accept="image/*" onchange="uploadCaseCover(this)">
+                    <p>📷 Нажмите чтобы загрузить обложку</p>
+                </div>
+                <input type="hidden" id="caseCoverUrl">
+            </div>
+
+            <div class="form-group" id="caseVideoGroup" style="display: none;">
+                <label>Ссылка на видео (YouTube, Rutube, VK Video)</label>
+                <input type="text" id="caseVideoUrl" placeholder="https://rutube.ru/video/... или https://vk.com/video-..." onchange="previewVideo()" oninput="previewVideo()">
+                <div id="videoPreview" style="margin-top: 12px; border-radius: 8px; overflow: hidden;"></div>
+            </div>
+
+            <div class="form-group">
+                <label>Подробное описание кейса</label>
+                <div class="editor-container">
+                    <div id="caseEditorjs"></div>
+                </div>
+            </div>
+
+            <div class="form-group">
+                <label>Результаты (каждый с новой строки)</label>
+                <textarea id="caseResults" rows="4" placeholder="Конверсия +40%
+Время обработки заявок -60%
+ROI 300%"></textarea>
+            </div>
+
+            <div class="form-group">
+                <label>Клиент (название компании)</label>
+                <input type="text" id="caseClient" placeholder="ООО Компания">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Config
+        const SUPABASE_URL = 'https://ulbgnmtevhyglebfkzil.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InVsYmdubXRldmh5Z2xlYmZremlsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2Njk0MDg4OCwiZXhwIjoyMDgyNTE2ODg4fQ.r91HOH3VgFtMQTPxnDiAGdZYRrttceUv1Rj1YTdAMlc';
+        const ADMIN_PASSWORD = '24ai_admin_2024'; // Поменяй на свой пароль!
+
+        let editor = null;
+
+        // Auth
+        function login() {
+            const password = document.getElementById('passwordInput').value;
+            if (password === ADMIN_PASSWORD) {
+                localStorage.setItem('admin_auth', 'true');
+                showAdminPanel();
+            } else {
+                document.getElementById('loginError').style.display = 'block';
+            }
+        }
+
+        function logout() {
+            localStorage.removeItem('admin_auth');
+            location.reload();
+        }
+
+        function checkAuth() {
+            if (localStorage.getItem('admin_auth') === 'true') {
+                showAdminPanel();
+            }
+        }
+
+        function showAdminPanel() {
+            document.getElementById('loginScreen').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            loadArticles();
+        }
+
+        // Tabs
+        function showTab(tab) {
+            document.querySelectorAll('.admin-tab').forEach(t => t.classList.remove('active'));
+            event.target.classList.add('active');
+            
+            document.getElementById('articlesTab').style.display = tab === 'articles' ? 'block' : 'none';
+            document.getElementById('casesTab').style.display = tab === 'cases' ? 'block' : 'none';
+            document.getElementById('reviewsTab').style.display = tab === 'reviews' ? 'block' : 'none';
+            document.getElementById('leadsTab').style.display = tab === 'leads' ? 'block' : 'none';
+
+            if (tab === 'cases') loadCases();
+            if (tab === 'reviews') loadReviews();
+            if (tab === 'leads') loadLeads();
+        }
+
+        // Articles
+        async function loadArticles() {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/articles?order=created_at.desc`, {
+                headers: { 'apikey': SUPABASE_KEY }
+            });
+            const articles = await response.json();
+            
+            const container = document.getElementById('articlesList');
+            if (articles.length === 0) {
+                container.innerHTML = '<div class="no-articles">Статей пока нет. Создайте первую!</div>';
+                return;
+            }
+
+            container.innerHTML = articles.map(article => `
+                <div class="article-item">
+                    <div class="article-info">
+                        <h3>${article.title} <span class="article-status ${article.published ? 'status-published' : 'status-draft'}">${article.published ? 'Опубликовано' : 'Черновик'}</span></h3>
+                        <p>/${article.slug} • ${new Date(article.created_at).toLocaleDateString('ru')}</p>
+                    </div>
+                    <div class="article-actions">
+                        <button class="btn btn-secondary" onclick="editArticle('${article.id}')">Редактировать</button>
+                        <button class="btn btn-danger" onclick="deleteArticle('${article.id}')">Удалить</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Editor
+        function showEditor(articleData = null) {
+            document.getElementById('adminPanel').style.display = 'none';
+            document.getElementById('editorScreen').style.display = 'block';
+
+            // Clear form
+            document.getElementById('articleId').value = articleData?.id || '';
+            document.getElementById('articleTitle').value = articleData?.title || '';
+            document.getElementById('articleSlug').value = articleData?.slug || '';
+            document.getElementById('articleDescription').value = articleData?.description || '';
+            document.getElementById('coverUrl').value = articleData?.cover_url || '';
+            
+            const coverUpload = document.getElementById('coverUpload');
+            if (articleData?.cover_url) {
+                coverUpload.innerHTML = `<img src="${articleData.cover_url}" alt="Cover">`;
+                coverUpload.classList.add('has-image');
+            } else {
+                coverUpload.innerHTML = `<input type="file" id="coverInput" accept="image/*" onchange="uploadCover(this)"><p>📷 Нажмите чтобы загрузить обложку</p>`;
+                coverUpload.classList.remove('has-image');
+            }
+
+            // Initialize Editor.js
+            if (editor) {
+                editor.destroy();
+            }
+
+            editor = new EditorJS({
+                holder: 'editorjs',
+                placeholder: 'Начните писать статью... (нажмите Tab или + слева для добавления блоков)',
+                tools: {
+                    header: {
+                        class: window.Header,
+                        config: {
+                            levels: [2, 3, 4],
+                            defaultLevel: 2
+                        }
+                    },
+                    list: {
+                        class: window.NestedList || window.List,
+                        inlineToolbar: true
+                    },
+                    quote: window.Quote,
+                    delimiter: window.Delimiter,
+                    image: {
+                        class: window.ImageTool,
+                        config: {
+                            uploader: {
+                                uploadByFile(file) {
+                                    return uploadImage(file);
+                                }
+                            }
+                        }
+                    }
+                },
+                data: articleData?.content ? JSON.parse(articleData.content) : {},
+                onReady: () => {
+                    console.log('Editor.js ready!');
+                }
+            });
+        }
+
+        function hideEditor() {
+            document.getElementById('editorScreen').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            if (editor) {
+                editor.destroy();
+                editor = null;
+            }
+        }
+
+        async function editArticle(id) {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/articles?id=eq.${id}`, {
+                headers: { 'apikey': SUPABASE_KEY }
+            });
+            const articles = await response.json();
+            if (articles.length > 0) {
+                showEditor(articles[0]);
+            }
+        }
+
+        async function saveArticle(publish) {
+            const editorData = await editor.save();
+            
+            const article = {
+                title: document.getElementById('articleTitle').value,
+                slug: document.getElementById('articleSlug').value,
+                description: document.getElementById('articleDescription').value,
+                cover_url: document.getElementById('coverUrl').value,
+                content: JSON.stringify(editorData),
+                published: publish
+            };
+
+            const id = document.getElementById('articleId').value;
+            
+            if (id) {
+                // Update
+                await fetch(`${SUPABASE_URL}/rest/v1/articles?id=eq.${id}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(article)
+                });
+            } else {
+                // Create
+                await fetch(`${SUPABASE_URL}/rest/v1/articles`, {
+                    method: 'POST',
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(article)
+                });
+            }
+
+            hideEditor();
+            loadArticles();
+            alert(publish ? 'Статья опубликована!' : 'Черновик сохранён!');
+        }
+
+        async function deleteArticle(id) {
+            if (!confirm('Удалить статью?')) return;
+            
+            await fetch(`${SUPABASE_URL}/rest/v1/articles?id=eq.${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                }
+            });
+            loadArticles();
+        }
+
+        // Image Upload
+        async function uploadImage(file) {
+            const fileName = `article_${Date.now()}_${file.name}`;
+            
+            const response = await fetch(`${SUPABASE_URL}/storage/v1/object/photos/${fileName}`, {
+                method: 'POST',
+                headers: {
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': file.type
+                },
+                body: file
+            });
+
+            if (response.ok) {
+                const url = `${SUPABASE_URL}/storage/v1/object/public/photos/${fileName}`;
+                return {
+                    success: 1,
+                    file: { url }
+                };
+            }
+            return { success: 0 };
+        }
+
+        async function uploadCover(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const result = await uploadImage(file);
+            if (result.success) {
+                document.getElementById('coverUrl').value = result.file.url;
+                const coverUpload = document.getElementById('coverUpload');
+                coverUpload.innerHTML = `<img src="${result.file.url}" alt="Cover">`;
+                coverUpload.classList.add('has-image');
+            }
+        }
+
+        // Reviews
+        async function loadReviews() {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/reviews?order=created_at.desc`, {
+                headers: { 'apikey': SUPABASE_KEY }
+            });
+            const reviews = await response.json();
+            
+            const container = document.getElementById('reviewsList');
+            if (reviews.length === 0) {
+                container.innerHTML = '<div class="no-articles">Отзывов пока нет</div>';
+                return;
+            }
+
+            container.innerHTML = reviews.map(review => `
+                <div class="review-item">
+                    <div class="review-header">
+                        <div>
+                            <span class="review-author">${review.name}</span>
+                            <span class="review-company">${review.company || ''}</span>
+                        </div>
+                        <span class="article-status ${review.status === 'approved' ? 'status-published' : 'status-draft'}">${review.status}</span>
+                    </div>
+                    <div class="review-text">${review.text}</div>
+                    <div class="review-actions">
+                        ${review.status !== 'approved' ? `<button class="btn btn-primary" onclick="approveReview('${review.id}')">Одобрить</button>` : ''}
+                        <button class="btn btn-danger" onclick="deleteReview('${review.id}')">Удалить</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function approveReview(id) {
+            await fetch(`${SUPABASE_URL}/rest/v1/reviews?id=eq.${id}`, {
+                method: 'PATCH',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`,
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ status: 'approved' })
+            });
+            loadReviews();
+        }
+
+        async function deleteReview(id) {
+            if (!confirm('Удалить отзыв?')) return;
+            await fetch(`${SUPABASE_URL}/rest/v1/reviews?id=eq.${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                }
+            });
+            loadReviews();
+        }
+
+        // Leads
+        async function loadLeads() {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/leads?order=created_at.desc`, {
+                headers: { 'apikey': SUPABASE_KEY }
+            });
+            const leads = await response.json();
+            
+            const container = document.getElementById('leadsList');
+            if (leads.length === 0) {
+                container.innerHTML = '<div class="no-articles">Заявок пока нет</div>';
+                return;
+            }
+
+            container.innerHTML = leads.map(lead => `
+                <div class="review-item">
+                    <div class="review-header">
+                        <div>
+                            <span class="review-author">${lead.name}</span>
+                            <span class="review-company">${lead.company || ''}</span>
+                        </div>
+                        <span>${new Date(lead.created_at).toLocaleString('ru')}</span>
+                    </div>
+                    <div class="review-text"><strong>Контакт:</strong> ${lead.contact}</div>
+                    <div class="review-text"><strong>Задача:</strong> ${lead.task || 'Не указана'}</div>
+                </div>
+            `).join('');
+        }
+
+        // Auto-generate slug
+        document.getElementById('articleTitle')?.addEventListener('input', function() {
+            const slug = this.value
+                .toLowerCase()
+                .replace(/[а-яё]/g, char => {
+                    const map = {'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'};
+                    return map[char] || char;
+                })
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '');
+            document.getElementById('articleSlug').value = slug;
+        });
+
+        // ============ CASES ============
+        let caseEditor = null;
+        let caseCoverType = 'image';
+
+        async function loadCases() {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/cases?order=created_at.desc`, {
+                    headers: { 'apikey': SUPABASE_KEY }
+                });
+                const cases = await response.json();
+                
+                const container = document.getElementById('casesList');
+                if (!cases || cases.length === 0) {
+                    container.innerHTML = '<div class="no-articles">Кейсов пока нет. Создайте первый!</div>';
+                    return;
+                }
+
+                container.innerHTML = cases.map(c => `
+                    <div class="article-item">
+                        <div class="article-info">
+                            <h3>${c.title} <span class="article-status ${c.published ? 'status-published' : 'status-draft'}">${c.published ? 'Опубликовано' : 'Черновик'}</span></h3>
+                            <p>/${c.slug} • ${c.client || 'Клиент не указан'} • ${new Date(c.created_at).toLocaleDateString('ru')}</p>
+                        </div>
+                        <div class="article-actions">
+                            <button class="btn btn-secondary" onclick="editCase('${c.id}')">Редактировать</button>
+                            <button class="btn btn-danger" onclick="deleteCase('${c.id}')">Удалить</button>
+                        </div>
+                    </div>
+                `).join('');
+            } catch (error) {
+                console.error('Error loading cases:', error);
+                document.getElementById('casesList').innerHTML = '<div class="no-articles">Ошибка загрузки. Возможно таблица cases ещё не создана.</div>';
+            }
+        }
+
+        function showCaseEditor(caseData = null) {
+            document.getElementById('adminPanel').style.display = 'none';
+            document.getElementById('caseEditorScreen').style.display = 'block';
+            
+            // Reset form
+            document.getElementById('caseId').value = caseData?.id || '';
+            document.getElementById('caseTitle').value = caseData?.title || '';
+            document.getElementById('caseSlug').value = caseData?.slug || '';
+            document.getElementById('caseDescription').value = caseData?.description || '';
+            document.getElementById('caseCoverUrl').value = caseData?.cover_url || '';
+            document.getElementById('caseVideoUrl').value = caseData?.video_url || '';
+            document.getElementById('caseResults').value = caseData?.results ? caseData.results.join('\n') : '';
+            document.getElementById('caseClient').value = caseData?.client || '';
+
+            // Set cover type
+            if (caseData?.video_url) {
+                setCoverType('video');
+                previewVideo();
+            } else {
+                setCoverType('image');
+            }
+
+            // Update cover preview
+            if (caseData?.cover_url) {
+                document.getElementById('caseCoverUpload').innerHTML = `
+                    <img src="${caseData.cover_url}" style="max-width: 100%; border-radius: 8px;">
+                    <p style="margin-top: 8px;">Нажмите чтобы заменить</p>
+                `;
+            }
+
+            // Init Editor.js for cases
+            if (caseEditor) {
+                caseEditor.destroy();
+            }
+            
+            caseEditor = new EditorJS({
+                holder: 'caseEditorjs',
+                placeholder: 'Расскажите подробно о кейсе...',
+                tools: {
+                    header: { class: Header, config: { levels: [2, 3, 4] } },
+                    list: { class: List },
+                    quote: { class: Quote },
+                    delimiter: { class: Delimiter },
+                    image: {
+                        class: ImageTool,
+                        config: {
+                            uploader: {
+                                async uploadByFile(file) {
+                                    const fileName = `cases/${Date.now()}-${file.name}`;
+                                    const response = await fetch(`${SUPABASE_URL}/storage/v1/object/photos/${fileName}`, {
+                                        method: 'POST',
+                                        headers: {
+                                            'Authorization': `Bearer ${SUPABASE_KEY}`,
+                                            'Content-Type': file.type
+                                        },
+                                        body: file
+                                    });
+                                    
+                                    if (response.ok) {
+                                        return {
+                                            success: 1,
+                                            file: { url: `${SUPABASE_URL}/storage/v1/object/public/photos/${fileName}` }
+                                        };
+                                    }
+                                    return { success: 0 };
+                                }
+                            }
+                        }
+                    }
+                },
+                data: caseData?.content ? JSON.parse(caseData.content) : {}
+            });
+        }
+
+        function hideCaseEditor() {
+            document.getElementById('caseEditorScreen').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            if (caseEditor) {
+                caseEditor.destroy();
+                caseEditor = null;
+            }
+        }
+
+        function setCoverType(type) {
+            caseCoverType = type;
+            document.getElementById('coverTypeImage').classList.toggle('btn-primary', type === 'image');
+            document.getElementById('coverTypeImage').classList.toggle('btn-secondary', type !== 'image');
+            document.getElementById('coverTypeVideo').classList.toggle('btn-primary', type === 'video');
+            document.getElementById('coverTypeVideo').classList.toggle('btn-secondary', type !== 'video');
+            
+            document.getElementById('caseImageUploadGroup').style.display = type === 'image' ? 'block' : 'none';
+            document.getElementById('caseVideoGroup').style.display = type === 'video' ? 'block' : 'none';
+        }
+
+        function previewVideo() {
+            const url = document.getElementById('caseVideoUrl').value;
+            const preview = document.getElementById('videoPreview');
+            
+            // YouTube
+            const youtubeMatch = url.match(/(?:youtube\.com\/watch\?v=|youtu\.be\/|youtube\.com\/embed\/)([^&\s]+)/);
+            if (youtubeMatch) {
+                const videoId = youtubeMatch[1];
+                preview.innerHTML = `<iframe width="100%" height="315" src="https://www.youtube.com/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+                return;
+            }
+            
+            // Rutube
+            const rutubeMatch = url.match(/rutube\.ru\/video\/([a-zA-Z0-9]+)/);
+            if (rutubeMatch) {
+                const videoId = rutubeMatch[1];
+                preview.innerHTML = `<iframe width="100%" height="315" src="https://rutube.ru/play/embed/${videoId}" frameborder="0" allowfullscreen></iframe>`;
+                return;
+            }
+            
+            // VK Video (разные форматы ссылок)
+            const vkMatch = url.match(/vk\.com\/video(-?\d+)_(\d+)/) || url.match(/vkvideo\.ru\/video(-?\d+)_(\d+)/);
+            if (vkMatch) {
+                const ownerId = vkMatch[1];
+                const videoId = vkMatch[2];
+                preview.innerHTML = `<iframe width="100%" height="315" src="https://vk.com/video_ext.php?oid=${ownerId}&id=${videoId}" frameborder="0" allowfullscreen></iframe>`;
+                return;
+            }
+
+            // VK Video новый формат (vkvideo.ru)
+            const vkNewMatch = url.match(/vkvideo\.ru\/([a-zA-Z0-9_-]+)/);
+            if (vkNewMatch && !url.includes('/video')) {
+                preview.innerHTML = `<p style="color: #d4a855;">VK Video обнаружен. Для embed используйте формат: vk.com/video-XXXXX_XXXXX</p>`;
+                return;
+            }
+            
+            preview.innerHTML = '<p style="color: #888;">Поддерживаются: YouTube, Rutube, VK Video<br>Примеры:<br>• https://rutube.ru/video/abc123...<br>• https://vk.com/video-12345_67890</p>';
+        }
+
+        async function uploadCaseCover(input) {
+            const file = input.files[0];
+            if (!file) return;
+
+            const fileName = `cases/covers/${Date.now()}-${file.name}`;
+            
+            try {
+                const response = await fetch(`${SUPABASE_URL}/storage/v1/object/photos/${fileName}`, {
+                    method: 'POST',
+                    headers: {
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': file.type
+                    },
+                    body: file
+                });
+
+                if (response.ok) {
+                    const url = `${SUPABASE_URL}/storage/v1/object/public/photos/${fileName}`;
+                    document.getElementById('caseCoverUrl').value = url;
+                    document.getElementById('caseCoverUpload').innerHTML = `
+                        <img src="${url}" style="max-width: 100%; border-radius: 8px;">
+                        <p style="margin-top: 8px;">Нажмите чтобы заменить</p>
+                    `;
+                }
+            } catch (error) {
+                console.error('Upload error:', error);
+                alert('Ошибка загрузки изображения');
+            }
+        }
+
+        async function saveCase(publish) {
+            const id = document.getElementById('caseId').value;
+            const title = document.getElementById('caseTitle').value;
+            const slug = document.getElementById('caseSlug').value;
+            const description = document.getElementById('caseDescription').value;
+            const coverUrl = document.getElementById('caseCoverUrl').value;
+            const videoUrl = document.getElementById('caseVideoUrl').value;
+            const results = document.getElementById('caseResults').value.split('\n').filter(r => r.trim());
+            const client = document.getElementById('caseClient').value;
+
+            if (!title || !slug) {
+                alert('Заполните название и URL кейса');
+                return;
+            }
+
+            let content = null;
+            if (caseEditor) {
+                const savedData = await caseEditor.save();
+                content = JSON.stringify(savedData);
+            }
+
+            const caseData = {
+                title,
+                slug,
+                description,
+                cover_url: caseCoverType === 'image' ? coverUrl : null,
+                video_url: caseCoverType === 'video' ? videoUrl : null,
+                content,
+                results,
+                client,
+                published: publish
+            };
+
+            try {
+                const method = id ? 'PATCH' : 'POST';
+                const url = id 
+                    ? `${SUPABASE_URL}/rest/v1/cases?id=eq.${id}` 
+                    : `${SUPABASE_URL}/rest/v1/cases`;
+
+                const response = await fetch(url, {
+                    method,
+                    headers: {
+                        'apikey': SUPABASE_KEY,
+                        'Authorization': `Bearer ${SUPABASE_KEY}`,
+                        'Content-Type': 'application/json',
+                        'Prefer': 'return=minimal'
+                    },
+                    body: JSON.stringify(caseData)
+                });
+
+                if (response.ok) {
+                    alert(publish ? 'Кейс опубликован!' : 'Черновик сохранён!');
+                    hideCaseEditor();
+                    loadCases();
+                } else {
+                    const error = await response.text();
+                    console.error('Save error:', error);
+                    alert('Ошибка сохранения: ' + error);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Ошибка сохранения');
+            }
+        }
+
+        async function editCase(id) {
+            const response = await fetch(`${SUPABASE_URL}/rest/v1/cases?id=eq.${id}`, {
+                headers: { 'apikey': SUPABASE_KEY }
+            });
+            const cases = await response.json();
+            if (cases.length > 0) {
+                showCaseEditor(cases[0]);
+            }
+        }
+
+        async function deleteCase(id) {
+            if (!confirm('Удалить кейс?')) return;
+            
+            await fetch(`${SUPABASE_URL}/rest/v1/cases?id=eq.${id}`, {
+                method: 'DELETE',
+                headers: {
+                    'apikey': SUPABASE_KEY,
+                    'Authorization': `Bearer ${SUPABASE_KEY}`
+                }
+            });
+            loadCases();
+        }
+
+        // Auto-generate slug for cases
+        document.getElementById('caseTitle')?.addEventListener('input', function() {
+            const slug = this.value
+                .toLowerCase()
+                .replace(/[а-яё]/g, char => {
+                    const map = {'а':'a','б':'b','в':'v','г':'g','д':'d','е':'e','ё':'yo','ж':'zh','з':'z','и':'i','й':'y','к':'k','л':'l','м':'m','н':'n','о':'o','п':'p','р':'r','с':'s','т':'t','у':'u','ф':'f','х':'h','ц':'ts','ч':'ch','ш':'sh','щ':'sch','ъ':'','ы':'y','ь':'','э':'e','ю':'yu','я':'ya'};
+                    return map[char] || char;
+                })
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-|-$/g, '');
+            document.getElementById('caseSlug').value = slug;
+        });
+
+        // Init
+        checkAuth();
+    </script>
+</body>
+</html>
