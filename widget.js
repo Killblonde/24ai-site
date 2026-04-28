@@ -232,31 +232,34 @@
     };
   });
 
-  function requestIframeState() {
-    if (!modalIframeEl || !modalIframeEl.contentWindow) return;
+  function readIframeStateSync() {
+    // Same-origin path: read iframe localStorage directly. Cross-origin throws — fall back to postMessage cache.
     try {
-      modalIframeEl.contentWindow.postMessage({ type: '24ai-diag:request-state' }, '*');
-    } catch (e) {}
+      var ls = modalIframeEl && modalIframeEl.contentWindow && modalIframeEl.contentWindow.localStorage;
+      if (!ls) return null;
+      return {
+        screen: ls.getItem('24ai_diag_screen') || 'welcome',
+        hasSession: !!ls.getItem('24ai_diag_session_id'),
+        submitted: ls.getItem('24ai_diag_contact_submitted') === 'true'
+      };
+    } catch (e) { return null; }
   }
 
   function shouldShowExitIntent() {
     if (exitIntentShown) return false;
-    if (!lastIframeState.hasSession) return false;
-    if (lastIframeState.submitted) return false;
-    if (lastIframeState.screen === 'thanks') return false;
+    var s = readIframeStateSync() || lastIframeState;
+    if (!s.hasSession) return false;
+    if (s.submitted) return false;
+    if (s.screen === 'thanks') return false;
     return true;
   }
 
   function requestCloseModal() {
-    requestIframeState();
-    // give the iframe a tiny window to respond before deciding
-    setTimeout(function () {
-      if (shouldShowExitIntent()) {
-        openExitIntent();
-      } else {
-        closeModal();
-      }
-    }, 60);
+    if (shouldShowExitIntent()) {
+      openExitIntent();
+    } else {
+      closeModal();
+    }
   }
 
   function buildExitModal() {
