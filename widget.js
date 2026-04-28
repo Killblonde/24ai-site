@@ -7,7 +7,8 @@
     teaserText: 'Здравствуйте! Меня зовут Аня. Помогу разобраться, что в вашем бизнесе можно автоматизировать. Пройдём короткую диагностику?',
     diagPath: '/diagnostika.html',
     avatarPath: '/img/assistant.jpg',
-    lsKeyDismissed: '24ai_widget_teaser_dismissed'
+    lsKeyDismissed: '24ai_widget_teaser_dismissed',
+    apiUrl: 'https://api.24-ai.ru'
   };
 
   var path = location.pathname.toLowerCase();
@@ -55,7 +56,31 @@
     + '.ai24-widget-modal{width:100vw;height:100dvh;max-width:none;max-height:none;border-radius:0;left:0;top:0;transform:none}'
     + '.ai24-widget-modal.is-open{transform:none}'
     + '.ai24-widget-modal-close{top:10px;right:10px}'
-    + '}';
+    + '}'
+    + '.ai24-exit-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.7);z-index:1000001;opacity:0;pointer-events:none;transition:opacity .18s ease;font-family:Inter,-apple-system,BlinkMacSystemFont,Segoe UI,sans-serif}'
+    + '.ai24-exit-backdrop.is-open{opacity:1;pointer-events:auto}'
+    + '.ai24-exit-modal{position:fixed;left:50%;top:50%;transform:translate(-50%,-46%);width:90vw;max-width:420px;background:var(--w-bg,#1a1a24);color:var(--w-text,#fff);border:1px solid var(--w-border,#2a2a3a);border-radius:18px;padding:28px 24px 24px;box-shadow:0 30px 80px rgba(0,0,0,.6);z-index:1000002;opacity:0;pointer-events:none;transition:opacity .18s ease,transform .18s ease;font-family:inherit}'
+    + '.ai24-exit-modal.is-open{opacity:1;pointer-events:auto;transform:translate(-50%,-50%)}'
+    + '.ai24-exit-title{font-family:"Space Grotesk",Inter,sans-serif;font-size:22px;font-weight:700;margin:0 0 10px;line-height:1.25}'
+    + '.ai24-exit-sub{font-size:14.5px;color:var(--w-text-secondary,#a0a0b0);margin:0 0 20px;line-height:1.5}'
+    + '.ai24-exit-field{margin-bottom:12px}'
+    + '.ai24-exit-field label{display:block;font-size:12.5px;color:var(--w-text-secondary,#a0a0b0);margin-bottom:6px;font-weight:500}'
+    + '.ai24-exit-field input{width:100%;background:var(--bg-secondary,#12121a);color:var(--w-text,#fff);border:1px solid var(--w-border,#2a2a3a);border-radius:12px;padding:11px 13px;font-size:15px;outline:none;font-family:inherit;transition:border-color .15s ease,box-shadow .15s ease;box-sizing:border-box}'
+    + '.ai24-exit-field input:focus{border-color:var(--w-accent,#f7c948);box-shadow:0 0 0 3px rgba(247,201,72,0.15)}'
+    + '.ai24-exit-field.has-error input{border-color:#ff6b6b}'
+    + '.ai24-exit-field-error{display:none;font-size:12px;color:#ff6b6b;margin-top:4px}'
+    + '.ai24-exit-field.has-error .ai24-exit-field-error{display:block}'
+    + '.ai24-exit-submit{width:100%;background:var(--w-accent,#f7c948);color:#000;border:0;border-radius:12px;padding:13px 16px;font-size:15px;font-weight:600;cursor:pointer;font-family:inherit;display:flex;align-items:center;justify-content:center;gap:8px;min-height:46px;transition:background .15s ease,transform .15s ease}'
+    + '.ai24-exit-submit:hover{background:#fad96a}'
+    + '.ai24-exit-submit:active{transform:scale(0.98)}'
+    + '.ai24-exit-submit[disabled]{opacity:0.7;cursor:not-allowed}'
+    + '.ai24-exit-submit-spinner{width:16px;height:16px;border:2px solid rgba(0,0,0,0.25);border-top-color:#000;border-radius:50%;animation:ai24WidgetSpin .7s linear infinite;display:inline-block}'
+    + '.ai24-exit-skip{display:block;width:100%;margin-top:12px;background:none;border:0;color:var(--w-text-muted,#6b6b7b);font-size:13.5px;cursor:pointer;text-decoration:underline;text-underline-offset:3px;padding:6px;font-family:inherit}'
+    + '.ai24-exit-skip:hover{color:var(--w-text-secondary,#a0a0b0)}'
+    + '.ai24-exit-error{display:none;margin-top:10px;padding:9px 12px;background:rgba(255,107,107,0.1);border:1px solid rgba(255,107,107,0.3);border-radius:10px;color:#ff6b6b;font-size:13px;text-align:center}'
+    + '.ai24-exit-toast{position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--w-bg,#1a1a24);color:var(--w-text,#fff);border:1px solid var(--w-accent,#f7c948);border-radius:14px;padding:18px 26px;font-size:15px;font-weight:500;z-index:1000003;opacity:0;pointer-events:none;transition:opacity .2s ease;box-shadow:0 20px 50px rgba(0,0,0,.55);font-family:inherit}'
+    + '.ai24-exit-toast.is-open{opacity:1}'
+    + '@media (max-width:480px){.ai24-exit-modal{padding:24px 18px 18px;width:calc(100vw - 24px)}.ai24-exit-title{font-size:20px}}';
 
   var styleEl = document.createElement('style');
   styleEl.setAttribute('data-ai24-widget', '');
@@ -144,14 +169,18 @@
     document.body.appendChild(modalBackdropEl);
     document.body.appendChild(modalEl);
 
-    modalCloseEl.addEventListener('click', closeModal);
-    modalBackdropEl.addEventListener('click', closeModal);
+    modalCloseEl.addEventListener('click', requestCloseModal);
+    modalBackdropEl.addEventListener('click', requestCloseModal);
     document.addEventListener('keydown', onKeydown);
   }
 
   function onKeydown(e) {
+    if (e.key === 'Escape' && exitModalEl && exitModalEl.classList.contains('is-open')) {
+      closeExitIntent();
+      return;
+    }
     if (e.key === 'Escape' && modalEl && modalEl.classList.contains('is-open')) {
-      closeModal();
+      requestCloseModal();
     }
   }
 
@@ -183,6 +212,200 @@
     if (lastFocusEl && typeof lastFocusEl.focus === 'function') {
       try { lastFocusEl.focus(); } catch (e) {}
     }
+  }
+
+  /* ---------- Exit-intent ---------- */
+  var lastIframeState = { screen: 'welcome', hasSession: false, submitted: false };
+  var exitIntentShown = false;
+  var exitModalEl = null;
+  var exitBackdropEl = null;
+  var exitToastEl = null;
+  var exitBuilt = false;
+
+  window.addEventListener('message', function (e) {
+    var data = e && e.data;
+    if (!data || data.type !== '24ai-diag:state') return;
+    lastIframeState = {
+      screen: data.screen || 'welcome',
+      hasSession: !!data.hasSession,
+      submitted: !!data.submitted
+    };
+  });
+
+  function requestIframeState() {
+    if (!modalIframeEl || !modalIframeEl.contentWindow) return;
+    try {
+      modalIframeEl.contentWindow.postMessage({ type: '24ai-diag:request-state' }, '*');
+    } catch (e) {}
+  }
+
+  function shouldShowExitIntent() {
+    if (exitIntentShown) return false;
+    if (!lastIframeState.hasSession) return false;
+    if (lastIframeState.submitted) return false;
+    if (lastIframeState.screen === 'thanks') return false;
+    return true;
+  }
+
+  function requestCloseModal() {
+    requestIframeState();
+    // give the iframe a tiny window to respond before deciding
+    setTimeout(function () {
+      if (shouldShowExitIntent()) {
+        openExitIntent();
+      } else {
+        closeModal();
+      }
+    }, 60);
+  }
+
+  function buildExitModal() {
+    if (exitBuilt) return;
+    exitBuilt = true;
+
+    exitBackdropEl = document.createElement('div');
+    exitBackdropEl.className = 'ai24-exit-backdrop';
+
+    exitModalEl = document.createElement('div');
+    exitModalEl.className = 'ai24-exit-modal';
+    exitModalEl.setAttribute('role', 'dialog');
+    exitModalEl.setAttribute('aria-modal', 'true');
+    exitModalEl.setAttribute('aria-label', 'Оставить контакты');
+    exitModalEl.innerHTML = ''
+      + '<h3 class="ai24-exit-title">Уйдёте без ответа?</h3>'
+      + '<p class="ai24-exit-sub">Оставьте контакты - Роман Сухов свяжется, чтобы продолжить разговор и помочь с диагностикой.</p>'
+      + '<form class="ai24-exit-form" novalidate>'
+      +   '<div class="ai24-exit-field" data-field="name">'
+      +     '<label for="ai24-exit-name">Имя</label>'
+      +     '<input id="ai24-exit-name" type="text" autocomplete="name" required>'
+      +     '<div class="ai24-exit-field-error">Введите имя (минимум 2 символа).</div>'
+      +   '</div>'
+      +   '<div class="ai24-exit-field" data-field="phone">'
+      +     '<label for="ai24-exit-phone">Телефон или Telegram</label>'
+      +     '<input id="ai24-exit-phone" type="text" autocomplete="tel" required placeholder="+7... или @username">'
+      +     '<div class="ai24-exit-field-error">Введите телефон или Telegram-юзернейм.</div>'
+      +   '</div>'
+      +   '<button type="submit" class="ai24-exit-submit">Оставить контакты</button>'
+      +   '<div class="ai24-exit-error"></div>'
+      +   '<button type="button" class="ai24-exit-skip">Всё равно закрыть</button>'
+      + '</form>';
+
+    document.body.appendChild(exitBackdropEl);
+    document.body.appendChild(exitModalEl);
+
+    var formEl = exitModalEl.querySelector('.ai24-exit-form');
+    var skipEl = exitModalEl.querySelector('.ai24-exit-skip');
+    var nameEl = exitModalEl.querySelector('#ai24-exit-name');
+    var phoneEl = exitModalEl.querySelector('#ai24-exit-phone');
+
+    [nameEl, phoneEl].forEach(function (el) {
+      el.addEventListener('input', function () {
+        var f = el.closest('.ai24-exit-field');
+        if (f) f.classList.remove('has-error');
+      });
+    });
+
+    formEl.addEventListener('submit', function (e) { e.preventDefault(); submitExitContact(); });
+    skipEl.addEventListener('click', function () {
+      closeExitIntent();
+      closeModal();
+    });
+    exitBackdropEl.addEventListener('click', function () {
+      // backdrop click on exit-intent: keep widget open, hide intent only
+      closeExitIntent();
+    });
+  }
+
+  function openExitIntent() {
+    buildExitModal();
+    exitIntentShown = true;
+    var errEl = exitModalEl.querySelector('.ai24-exit-error');
+    if (errEl) { errEl.style.display = 'none'; errEl.textContent = ''; }
+    exitModalEl.querySelectorAll('.ai24-exit-field').forEach(function (f) { f.classList.remove('has-error'); });
+    exitBackdropEl.classList.add('is-open');
+    exitModalEl.classList.add('is-open');
+    setTimeout(function () {
+      var nameEl = exitModalEl.querySelector('#ai24-exit-name');
+      try { if (nameEl) nameEl.focus(); } catch (e) {}
+    }, 80);
+  }
+
+  function closeExitIntent() {
+    if (!exitModalEl) return;
+    exitModalEl.classList.remove('is-open');
+    exitBackdropEl.classList.remove('is-open');
+  }
+
+  function showExitToast(text) {
+    if (!exitToastEl) {
+      exitToastEl = document.createElement('div');
+      exitToastEl.className = 'ai24-exit-toast';
+      document.body.appendChild(exitToastEl);
+    }
+    exitToastEl.textContent = text;
+    exitToastEl.classList.add('is-open');
+    setTimeout(function () {
+      if (exitToastEl) exitToastEl.classList.remove('is-open');
+    }, 2000);
+  }
+
+  function getDiagSessionId() {
+    try { return localStorage.getItem('24ai_diag_session_id') || ''; } catch (e) { return ''; }
+  }
+
+  function submitExitContact() {
+    var nameEl = exitModalEl.querySelector('#ai24-exit-name');
+    var phoneEl = exitModalEl.querySelector('#ai24-exit-phone');
+    var btnEl = exitModalEl.querySelector('.ai24-exit-submit');
+    var errEl = exitModalEl.querySelector('.ai24-exit-error');
+    var fName = exitModalEl.querySelector('[data-field="name"]');
+    var fPhone = exitModalEl.querySelector('[data-field="phone"]');
+
+    var name = (nameEl.value || '').trim();
+    var phone = (phoneEl.value || '').trim();
+    var bad = false;
+    if (name.length < 2) { fName.classList.add('has-error'); bad = true; }
+    if (phone.length < 5 || !/[\d@]/.test(phone)) { fPhone.classList.add('has-error'); bad = true; }
+    if (bad) return;
+
+    var sid = getDiagSessionId();
+    if (!sid) {
+      errEl.textContent = 'Сессия диагностики не найдена. Попробуйте через форму в чате.';
+      errEl.style.display = 'block';
+      return;
+    }
+
+    btnEl.disabled = true;
+    var origHtml = btnEl.innerHTML;
+    btnEl.innerHTML = '<span class="ai24-exit-submit-spinner" aria-hidden="true"></span>';
+    errEl.style.display = 'none';
+
+    fetch(CFG.apiUrl + '/api/submit-contact', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        session_id: sid,
+        name: name,
+        phone_or_telegram: phone,
+        company: 'не указана'
+      })
+    }).then(function (res) {
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res.json();
+    }).then(function () {
+      // mark submitted in localStorage so the widget restored next time goes to thanks
+      try { localStorage.setItem('24ai_diag_contact_submitted', 'true'); } catch (e) {}
+      lastIframeState.submitted = true;
+      closeExitIntent();
+      showExitToast('Спасибо! Роман свяжется с вами');
+      setTimeout(function () { closeModal(); }, 2000);
+    }).catch(function (err) {
+      errEl.textContent = 'Не удалось отправить. Попробуйте ещё раз.';
+      errEl.style.display = 'block';
+      btnEl.disabled = false;
+      btnEl.innerHTML = origHtml;
+      try { console.error('[24ai-widget] exit submit failed', err); } catch (e) {}
+    });
   }
 
   var teaserShown = false;

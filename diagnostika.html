@@ -72,6 +72,25 @@ a{color:inherit}
 .topbar-bell:hover{background:var(--bg-card-hover);color:var(--text-primary)}
 .topbar-bell svg{width:20px;height:20px}
 .topbar-bell.muted{color:var(--text-muted)}
+.topbar-actions{display:flex;align-items:center;gap:8px}
+.topbar-leave{
+  display:inline-flex;align-items:center;gap:6px;
+  height:36px;padding:0 12px;
+  border-radius:18px;
+  background:rgba(247,201,72,0.1);
+  border:1px solid rgba(247,201,72,0.35);
+  color:var(--accent-yellow);
+  font-size:13px;font-weight:500;
+  transition:background 0.15s ease,border-color 0.15s ease,transform 0.15s ease;
+}
+.topbar-leave:hover{background:rgba(247,201,72,0.18);border-color:rgba(247,201,72,0.55)}
+.topbar-leave:active{transform:scale(0.97)}
+.topbar-leave svg{width:16px;height:16px;flex-shrink:0}
+.topbar-leave-text{white-space:nowrap}
+@media (max-width:520px){
+  .topbar-leave{padding:0 10px;height:34px}
+  .topbar-leave-text{display:none}
+}
 
 /* Screens */
 .screen{
@@ -524,7 +543,13 @@ a{color:inherit}
 <section id="chat" class="screen">
   <header class="topbar with-border">
     <img src="img/logo.png" alt="24AI" class="topbar-logo">
-    <button type="button" class="topbar-bell" data-bell aria-label="Звуковые уведомления"></button>
+    <div class="topbar-actions">
+      <button type="button" class="topbar-leave" data-leave-contact aria-label="Оставить контакты">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v12H5.17L4 17.17V4z"/><path d="M8 9h8M8 12h5"/></svg>
+        <span class="topbar-leave-text">Оставить заявку</span>
+      </button>
+      <button type="button" class="topbar-bell" data-bell aria-label="Звуковые уведомления"></button>
+    </div>
   </header>
   <div class="chat-scroll" id="chatScroll">
     <div class="chat-list" id="chatList"></div>
@@ -545,7 +570,13 @@ a{color:inherit}
 <section id="report" class="screen">
   <header class="topbar with-border">
     <img src="img/logo.png" alt="24AI" class="topbar-logo">
-    <button type="button" class="topbar-bell" data-bell aria-label="Звуковые уведомления"></button>
+    <div class="topbar-actions">
+      <button type="button" class="topbar-leave" data-leave-contact aria-label="Оставить контакты">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 4h16v12H5.17L4 17.17V4z"/><path d="M8 9h8M8 12h5"/></svg>
+        <span class="topbar-leave-text">Оставить заявку</span>
+      </button>
+      <button type="button" class="topbar-bell" data-bell aria-label="Звуковые уведомления"></button>
+    </div>
   </header>
   <div class="report-wrap">
     <div class="report-card">
@@ -737,6 +768,20 @@ function uuidv4(){
   });
 }
 
+const SESSION_TTL_MS=6*60*60*1000; // 6 часов
+function expireOldSession(){
+  const startedAt=lsGet(KEY.startedAt);
+  if(!startedAt)return false;
+  const startedMs=new Date(startedAt).getTime();
+  if(!Number.isFinite(startedMs))return false;
+  const ageMs=Date.now()-startedMs;
+  if(ageMs>SESSION_TTL_MS){
+    Object.keys(KEY).forEach(k=>{if(k!=='sound')lsDel(KEY[k])});
+    return true;
+  }
+  return false;
+}
+
 function loadState(){
   state.sessionId=lsGet(KEY.sid);
   try{state.messages=JSON.parse(lsGet(KEY.msgs)||'[]')}catch(e){state.messages=[]}
@@ -766,6 +811,20 @@ function showScreen(name){
       if(ta && window.innerWidth>768)ta.focus();
     },50);
   }
+  postWidgetState();
+}
+
+/* ---------- postMessage to host (widget wrapper on main site) ---------- */
+function postWidgetState(){
+  if(window.parent===window)return;
+  try{
+    window.parent.postMessage({
+      type:'24ai-diag:state',
+      screen:lsGet(KEY.screen)||'welcome',
+      hasSession:!!state.sessionId && state.messages.length>0,
+      submitted:!!state.submitted,
+    },'*');
+  }catch(e){}
 }
 
 /* ---------- Markdown parser (minimal) ---------- */
@@ -1034,6 +1093,7 @@ async function sendMessage(text){
     hideTyping();
     const reply=humanizeText((data && data.reply)||'');
     const isFinal=!!(data && data.is_final) || looksLikeFinalReport(reply);
+    const showContactForm=!!(data && data.show_contact_form) && !isFinal;
     const asMsg={role:'assistant',content:reply,ts:Date.now()};
     state.messages.push(asMsg);
     saveMessages();
@@ -1046,6 +1106,8 @@ async function sendMessage(text){
       state.reportText=reply;
       saveReport();
       setTimeout(()=>{showScreen('report');renderReport()},400);
+    }else if(showContactForm){
+      setTimeout(()=>{showScreen('contact')},600);
     }
   }catch(err){
     clearTimeout(state.typingTimer);
@@ -1079,6 +1141,7 @@ function retryLastMessage(){
     clearTimeout(state.typingTimer);hideTyping();
     const reply=humanizeText((data && data.reply)||'');
     const isFinal=!!(data && data.is_final) || looksLikeFinalReport(reply);
+    const showContactForm=!!(data && data.show_contact_form) && !isFinal;
     const asMsg={role:'assistant',content:reply,ts:Date.now()};
     state.messages.push(asMsg);
     saveMessages();
@@ -1088,6 +1151,8 @@ function retryLastMessage(){
     if(isFinal){
       state.reportText=reply;saveReport();
       setTimeout(()=>{showScreen('report');renderReport()},400);
+    }else if(showContactForm){
+      setTimeout(()=>{showScreen('contact')},600);
     }
   }).catch(err=>{
     clearTimeout(state.typingTimer);hideTyping();
@@ -1178,6 +1243,7 @@ async function submitContact(e){
     state.submitted=true;
     lsSet(KEY.submitted,'true');
     showScreen('thanks');
+    postWidgetState();
   }catch(err){
     console.error('[24ai] submit-contact failed',err);
     Sounds.error();
@@ -1303,6 +1369,7 @@ function setupViewportFix(){
 
 /* ---------- Init ---------- */
 function init(){
+  expireOldSession();
   loadState();
 
   // Restore screen
@@ -1365,7 +1432,15 @@ function init(){
     setTimeout(()=>scrollChatToBottom(true,true),50);
   });
   document.getElementById('btnBackToReport').addEventListener('click',()=>{
-    showScreen('report');
+    if(state.reportText){
+      showScreen('report');
+    }else{
+      showScreen('chat');
+      setTimeout(()=>scrollChatToBottom(true,true),50);
+    }
+  });
+  document.querySelectorAll('[data-leave-contact]').forEach(el=>{
+    el.addEventListener('click',()=>{showScreen('contact')});
   });
   document.getElementById('contactForm').addEventListener('submit',submitContact);
 
@@ -1389,6 +1464,15 @@ function init(){
   // mark page as initialized AFTER state restoration so restore-from-localStorage
   // does not trigger any sound effects.
   state.pageInitialized=true;
+
+  // Respond to host (widget wrapper) requests for current state.
+  window.addEventListener('message',(e)=>{
+    if(!e || !e.data)return;
+    if(e.data.type==='24ai-diag:request-state'){
+      postWidgetState();
+    }
+  });
+  postWidgetState();
 
   // health ping after 1s
   setTimeout(pingHealth,1000);
